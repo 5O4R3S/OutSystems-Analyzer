@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OutSystems Analyzer - Scanning</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/logo.png') }}">
+</head>
+
+<body data-bs-theme="dark">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-8">
+                <figcaption class="blockquote-footer">
+                    <cite title="Lucas Soares">report</cite>: {{ accesskey }}
+                </figcaption>
+                <div class="alert alert-success" role="alert">
+                    <div class="row">
+                        <div class="col-sm-9">
+                            <h4 class="alert-heading d-flex align-items-center">
+                                <div class="spinner-border text-warning me-2" role="status"
+                                    style="width: 1.5rem; height: 1.5rem;">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                Analysis in progress...
+                            </h4>
+                            <br>
+                            <p>The analysis is in progress; we are verifying the target application and collecting
+                                public information to enhance your OSINT report.
+                                </br>
+                                This may take some time... When we finish, you will be automatically redirected to the
+                                results screen with all the data collected about the target.
+                            </p>
+                        </div>
+                        <div class="col-sm-3">
+                            <img src="{{ url_for('static', filename='img/logo-terminal.jpg') }}" class="rounded"
+                                style="width: -webkit-fill-available;">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div id="steps-log"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        const eventSource = new EventSource("/scanningstream?accesskey=" + "{{ accesskey }}");
+
+        eventSource.onmessage = function (event) {
+            const div = document.getElementById("steps-log");
+
+            // Remove destaque anterior
+            const previous = div.querySelector(".text-danger");
+            if (previous) {
+                previous.classList.remove("text-danger");
+            }
+
+            // Cria o novo item com destaque
+            const html_content = `
+            <p class="mb-0 d-flex align-items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                    class="bi bi-terminal me-2" viewBox="0 0 16 16">
+                    <path d="M6 9a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3A.5.5 0 0 1 6 9M3.854 4.146a.5.5 0 1 0-.708.708L4.793 6.5 3.146 8.146a.5.5 0 1 0 .708.708l2-2a.5.5 0 0 0 0-.708z"/>
+                    <path d="M2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2zm12 1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/>
+                </svg>
+                <span class="fw-bold text-danger">${event.data}</span>
+            </p>`;
+
+            div.innerHTML += html_content;
+
+            if (event.data === "done") {
+                eventSource.close();
+                window.location.href = "/detail?accesskey={{ accesskey }}";
+            }
+        };
+    </script>
+
+</body>
+
+</html>

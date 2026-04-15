@@ -1,0 +1,12 @@
+{
+    "version": "1.0.0",
+    "os_url_vuln_policy": "https://success.outsystems.com/support/security/vulnerabilities/",
+    "os_url_mvp_page": "https://www.outsystems.com/community/advocacy/members/?f=1",
+    "os_url_mentor_page": "https://www.outsystems.com/mentorship-program/",
+    "lucas_url_page": "https://www.linkedin.com/in/luuucas/",
+    "request_timeout": 15,
+    "max_attempts": 3,
+    "quick_mode": false,
+    "use_random_headers": true,
+    "debug_mode": false
+}

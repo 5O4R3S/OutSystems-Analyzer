@@ -1,0 +1,30 @@
+# Virtual environments
+OSANALYZER/
+
+# Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Temp files
+*.log
+*.tmp
+
+# Local settings
+.env
+
+# Playwright / Test-results
+playwright/.cache/
+test-results/
+
+# VS Code / IDEs
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Reports Generated
+reports/

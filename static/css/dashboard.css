@@ -1,0 +1,36 @@
+    .sidebar {
+        width: 260px;
+        min-height: 100vh;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.25);
+        position: sticky;
+        top: 0;
+    }
+
+    .sidebar-link {
+        padding: 10px 14px;
+        border-radius: 6px;
+        transition: background 0.2s, padding-left 0.2s;
+        font-size: 0.95rem;
+    }
+
+    .sidebar-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        padding-left: 18px;
+    }
+
+    .sidebar-link.active {
+        background: #0d6efd;
+        color: white !important;
+    }
+
+    #target .row>*:first-child {
+        padding-left: 0 !important;
+    }
+
+    #target .row>*:last-child {
+        padding-right: 0 !important;
+    }
+    #requestanalysis .card.expanded {
+        background-color: var(--bs-danger-bg-subtle); /* amarelo suave (warning) */
+        border-color: var(--bs-danger-border-subtle);
+    }

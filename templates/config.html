@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OutSystems Analyzer - Configurations</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="../static/img/logo.png">
+</head>
+
+<body data-bs-theme="dark">
+    <div class="container">
+        <h2 class="mt-5">Configurations</h2>
+        <form action="/config" method="POST">
+
+        <section class="mt-5">
+            <div class="alert alert-success" role="alert">
+                <h4 class="alert-heading">Requests</h4>
+                <p>Configure how requests are made and how they behave.</p>
+                <hr>
+                    <div class="form-check form-switch">
+                        <input name="use_random_headers" class="form-check-input" type="checkbox" role="switch"
+                            id="switchrandomheaders" {% if config.use_random_headers %}checked{% endif %}>
+                        <label class="form-check-label" for="switchrandomheaders">Using random headers in the request.</label>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <label for="inputRequestTimeout" class="col-sm-10 col-form-label">Timeout (seconds)</label>
+                        <div class="col-sm-2">
+                        <input name="request_timeout" type="number" class="form-control" id="inputRequestTimeout" value="{{ config.request_timeout }}">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label for="inputMaxAttempts" class="col-sm-10 col-form-label">Maximum number of request attempts</label>
+                        <div class="col-sm-2">
+                        <input name="max_attempts" type="number" class="form-control" id="inputMaxAttempts" value="{{ config.max_attempts }}">
+                        </div>
+                    </div>
+
+            </div>
+        </section>
+
+        <section class="mt-2">
+            <div class="alert alert-success" role="alert">
+                <h4 class="alert-heading">Performance</h4>
+                <p>Adjust how the tool should be run.</p>
+                <hr>
+                
+                    <div class="form-check form-switch">
+                        <input name="quick_mode" class="form-check-input" type="checkbox" role="switch"
+                            id="switchQuickMode" {% if config.quick_mode %}checked{% endif %}>
+                        <label class="form-check-label" for="switchQuickMode">Quick mode: performs only quick functions.</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input name="debug_mode" class="form-check-input" type="checkbox" role="switch"
+                            id="switchdebugMode" {% if config.debug_mode %}checked{% endif %}>
+                        <label class="form-check-label" for="switchdebugMode">Debug mode: Debug mode displays logs of what is running in real time in the terminal.</label>
+                    </div>
+                
+            </div>
+        </section>
+        <div class="d-flex justify-content-end">
+            <a class="btn btn-outline-light d-inline-flex align-items-center me-4" href="/">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download me-2" viewBox="0 0 16 16">
+                  <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m3.5 7.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5z"/>
+                </svg>
+                Back
+            </a>
+            <button type="submit" class="btn btn-danger d-inline-flex align-items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download me-2" viewBox="0 0 16 16">
+                    <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0H3v5.5A1.5 1.5 0 0 0 4.5 7h7A1.5 1.5 0 0 0 13 5.5V0h.086a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5H14v-5.5A1.5 1.5 0 0 0 12.5 9h-9A1.5 1.5 0 0 0 2 10.5V16h-.5A1.5 1.5 0 0 1 0 14.5z"/>
+                <path d="M3 16h10v-5.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5zm9-16H4v5.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5zM9 1h2v4H9z"/>
+                </svg>
+                Save Settings
+            </button>
+        </div>
+        </form>
+
+
+    </div>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+
+</html>

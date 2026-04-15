@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OutSystems Analyzer - Report Detail</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/logo.png') }}">
+</head>
+
+<body data-bs-theme="dark">
+    <main id="main-content" class="" data-bs-spy="scroll" data-bs-target="#sidebar-menu" data-bs-offset="80"
+        tabindex="0">
+
+        <div class="d-flex">
+
+            <!-- SIDEBAR -->
+            <nav id="sidebar-menu" class="sidebar bg-dark text-white p-3 position-fixed h-100 d-flex flex-column"
+                style="width: 260px;">
+
+                <div class="sidebar-header text-center mb-4 mt-4">
+                    <a href="{{ url_for('homePage') }}">
+                        <img src="{{ url_for('static', filename='img/logo.png') }}" class="img-fluid" width="100">
+                    </a>
+                </div>
+
+                <ul class="nav flex-column gap-1 mt-5">
+                    <li class="nav-item">
+                        <a href="#details" class="nav-link text-white d-flex align-items-center sidebar-link">
+                            <i class="bi bi-bullseye me-2"></i> Details
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#handshake" class="nav-link text-white d-flex align-items-center sidebar-link">
+                            <i class="bi bi-arrow-down-up me-2"></i> Handshakes
+                        </a>
+                    </li>
+
+                    <li class="nav-item" title="Screens, Requests, Resources and Dependencies">
+                        <a href="#buttonsdetails" class="nav-link text-white d-flex align-items-center sidebar-link">
+                            <i class="bi bi-4-circle me-2"></i> SRRD
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#mobileapps" class="nav-link text-white d-flex align-items-center sidebar-link">
+                            <i class="bi bi-folder2-open me-2"></i> Mobile Apps
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#clientvariables" class="nav-link text-white d-flex align-items-center sidebar-link">
+                            <i class="bi bi-braces-asterisk me-2"></i> Client Variables
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#platformcapabilities"
+                            class="nav-link text-white d-flex align-items-center sidebar-link">
+                            <i class="bi bi-gear me-2"></i> Platform Capabilities
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#referenceshealth" class="nav-link text-white d-flex align-items-center sidebar-link">
+                            <i class="bi bi-file-earmark-medical me-2"></i> Platform Capabilities
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#roleskey" class="nav-link text-white d-flex align-items-center sidebar-link">
+                            <i class="bi bi-key me-2"></i> Roles & Keys
+                        </a>
+                    </li>
+                </ul>
+
+                <a href="{{ url_for('homePage') }}" class="btn btn-danger d-inline-flex align-items-center mt-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                        class="bi bi-download me-2" viewBox="0 0 16 16">
+                        <path
+                            d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m3.5 7.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5z" />
+                    </svg>
+                    Back to home
+                </a>
+            </nav>
+
+
+            <!-- CONTEÚDO -->
+            <main class="content flex-grow-1 p-4" style="margin-left: 260px;">
+
+                <section id="details" class="mb-5">
+                    <h3>Report Detail</h3>
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                        <div>
+                            <span class="text-muted small">Identification</span>
+                            <p class="fw-bold mb-0">{{ report.metadata.analysis_id }}</p>
+                        </div>
+
+                        <div class="text-end">
+                            <span class="fst-italic small d-block">{{ report.metadata.started_at | datetimeformat
+                                }}</span>
+                            <span class="badge bg-success text-uppercase">{{ report.metadata.status }}</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success" role="alert">
+                        <div class="row">
+                            <div class="col">
+                                <p>
+                                    <span class="fw-bold small">Full URL</span></br>
+                                    <span class="fst-italic">{{ report.target.full_url }}</span>
+                                </p>
+                                <p>
+                                    <span class="fw-bold small">DNS (Enterprise Only)</span></br>
+                                    <span class="fst-italic">{{ report.target.real_dns }}</span>
+                                </p>
+                                <p>
+                                    <span class="fw-bold small">Module</span></br>
+                                    <span class="fst-italic">{{ report.target.homeModuleName }}</br>{{
+                                        report.target.homeModuleKey }}</span>
+                                </p>
+                                <p>
+                                    <span class="fw-bold small">Application</span></br>
+                                    <span class="fst-italic">{{ report.target.applicationName }}</br>{{
+                                        report.target.applicationKey }}</span>
+                                </p>
+                            </div>
+                            <div class="col">
+                                <p>
+                                    <span class="fw-bold small">Platform</span></br>
+                                    <span class="fst-italic">{{ report.platform_info.Version }} <span
+                                            class="badge text-bg-primary">version</span></br>{{
+                                        report.platform_info.Serial }} <span
+                                            class="badge text-bg-warning">serial</span></span>
+                                </p>
+                                <p>
+                                    <span class="fw-bold small">Installation</span></br>
+                                    <span class="fst-italic">{{ report.installation_info.InstallationKind }}</br>{{
+                                        report.installation_info.DatabaseKind }} <span
+                                            class="badge text-bg-primary">database</span></br>{{
+                                        report.installation_info.ApplicationServerType }} <span
+                                            class="badge text-bg-primary">server</span></span>
+                                </p>
+                                <p>
+                                    <span class="fw-bold small">Environment</span></br>
+                                    <span class="fst-italic">{{ report.target.environmentName }}</br>{{
+                                        report.target.environmentKey }}</span>
+                                </p>
+                            </div>
+                            <div class="col">
+                                <p>
+                                    <span class="fw-bold small">Tenant</span></br>
+                                    <span class="fst-italic">{{ report.target.userTenantProvider }}</span>
+                                </p>
+                                <p>
+                                    <span class="fw-bold small">React Version</span></br>
+                                    <span class="fst-italic">{{ report.target.react_version }}</span>
+                                </p>
+                                <p>
+                                    <span class="fw-bold small">Cloud Connect Version</span></br>
+                                    <span class="fst-italic">{{ report.target.cloudconnect_version }}</span>
+                                </p>
+                            </div>
+                        </div>
+                </section>
+
+                <section id="handshake" class="mb-5">
+                    <h4>Handshake</h4>
+                    <ul class="list-group">
+                        {% for item in report.handshake_properties %}
+                        <li class="list-group-item list-group-item-success"><span class="fw-bold small">{{ item.name
+                                }}</span></br>{{ item.value }}</li>
+                        {% endfor %}
+                    </ul>
+                </section>
+
+                <section id="buttonsdetails" class="mb-5">
+                    <h4>XHR</h4>
+                    <div class="text-center">
+                        <div class="row row-cols-4">
+                            <div class="col"><button type="button" class="btn btn-warning btn-lg w-100"
+                                    data-bs-toggle="modal" data-bs-target="#screensdetails"><i
+                                        class="bi bi-window-fullscreen fs-1"></i></br> Screens & Details</button></div>
+                            <div class="col"><button type="button" class="btn btn-warning btn-lg w-100"
+                                    data-bs-toggle="modal" data-bs-target="#requestanalysis"><i
+                                        class="bi bi-arrow-left-right fs-1"></i></br> Request Analysis</button></div>
+                            <div class="col"><button type="button" class="btn btn-warning btn-lg w-100"
+                                    data-bs-toggle="modal" data-bs-target="#resourcesdetail"><i
+                                        class="bi bi-folder2-open fs-1"></i></br> Resources</button></div>
+                            <div class="col"><button type="button" class="btn btn-warning btn-lg w-100"
+                                    data-bs-toggle="modal" data-bs-target="#dependenciesdetails"><i
+                                        class="bi bi-arrow-repeat fs-1"></i></br> Dependencies</button></div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Screen Details-->
+                    <div class="modal fade" id="screensdetails" data-bs-backdrop="static" data-bs-keyboard="false"
+                        tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Screens Details & Parameters,
+                                        Variables...</h1>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+
+
+
+                                    <div class="row">
+
+                                        {% for screen in report.screens_detail %}
+                                        <div class="col-12 mb-3">
+
+                                            <div class="card">
+
+                                                <!-- HEADER CLICÁVEL -->
+                                                <div class="card-header d-flex justify-content-between align-items-center"
+                                                    data-bs-toggle="collapse" data-bs-target="#screen-{{ loop.index }}"
+                                                    style="cursor: pointer;">
+
+                                                    <!-- Lado esquerdo: nome da tela -->
+                                                    <div>
+                                                        <i class="bi bi-window-fullscreen me-2"></i>
+
+                                                        {% if screen.suspicious %}
+                                                        <span class="text-warning ">
+                                                            {{ screen.path.lstrip('/') }}
+                                                        </span>
+                                                        {% else %}
+                                                        {{ screen.path.lstrip('/') }}
+                                                        {% endif %}
+                                                    </div>
+
+                                                    <!-- Lado direito: ícone de warning + seta -->
+                                                    <div class="d-flex align-items-center gap-2">
+
+                                                        {% if screen.suspicious %}
+                                                        <i class="bi bi-exclamation-triangle-fill text-warning"
+                                                            data-bs-toggle="tooltip"
+                                                            data-bs-title="Esta tela é suspeita"></i>
+                                                        {% endif %}
+
+                                                        <i class="bi bi-chevron-down"></i>
+                                                    </div>
+
+                                                </div>
+
+
+                                                <!-- CONTEÚDO COLAPSÁVEL -->
+                                                <div id="screen-{{ loop.index }}" class="collapse">
+
+                                                    <ul class="list-group list-group-flush">
+
+                                                        {% for var in screen.variables %}
+                                                        <li class="list-group-item d-flex align-items-center gap-2">
+
+                                                            {% if var.is_input %}
+                                                            <i class="bi bi-arrow-right-circle-fill text-danger-emphasis"
+                                                                data-bs-toggle="tooltip" data-bs-title="Input"></i>
+                                                            {% endif %}
+
+                                                            {% if var.is_local %}
+                                                            <i class="bi bi-circle-fill" data-bs-toggle="tooltip"
+                                                                data-bs-title="Local"></i>
+                                                            {% endif %}
+
+                                                            {% if var.is_aggregate %}
+                                                            <i class="bi bi-database-fill" data-bs-toggle="tooltip"
+                                                                data-bs-title="Aggregate"></i>
+                                                            {% endif %}
+
+                                                            {% if not var.is_input and not var.is_local and not
+                                                            var.is_aggregate %}
+                                                            <i class="bi bi-question-circle-fill"
+                                                                data-bs-toggle="tooltip" data-bs-title="Unknown"></i>
+                                                            {% endif %}
+
+                                                            <span>
+                                                                {{ var.name }}
+                                                                {% if var.default_value %}
+                                                                <span class="text-muted">[defaultValue: {{
+                                                                    var.default_value }}]</span>
+                                                                {% endif %}
+                                                            </span>
+
+                                                        </li>
+
+                                                        {% else %}
+                                                        <li class="list-group-item text-muted">No variables</li>
+                                                        {% endfor %}
+
+                                                    </ul>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Resources Available-->
+                    <div class="modal fade" id="resourcesdetail" data-bs-backdrop="static" data-bs-keyboard="false"
+                        tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Resources available</h1>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+
+                                    {% macro resource_icon(path) %}
+                                    {% set ext = path.split('.')[-1] | lower %}
+
+                                    {% if ext == 'html' %}
+                                    <i class="bi bi-filetype-html fs-1"></i>
+
+                                    {% elif ext in ['xlsx', 'xls'] %}
+                                    <i class="bi bi-file-earmark-spreadsheet fs-1"></i>
+
+                                    {% elif ext in ['doc', 'docx'] %}
+                                    <i class="bi bi-file-earmark-word fs-1"></i>
+
+                                    {% elif ext == 'aspx' %}
+                                    <i class="bi bi-filetype-html fs-1"></i>
+
+                                    {% elif ext == 'xml' %}
+                                    <i class="bi bi-filetype-xml fs-1"></i>
+
+                                    {% elif ext == 'pdf' %}
+                                    <i class="bi bi-file-earmark-pdf fs-1"></i>
+
+                                    {% elif ext == 'svg' %}
+                                    <i class="bi bi-filetype-svg fs-1"></i>
+
+                                    {% elif ext == 'exe' %}
+                                    <i class="bi bi-filetype-svg fs-1"></i>
+
+                                    {% elif ext == 'txt' %}
+                                    <i class="bi bi-filetype-txt fs-1"></i>
+
+                                    {% elif ext in ['woff', 'woff2', 'ttf'] %}
+                                    <i class="bi bi-fonts fs-1"></i>
+
+                                    {% elif ext in ['zip', '7z', 'rar'] %}
+                                    <i class="bi bi-file-zip-fill fs-1"></i>
+
+                                    {% elif ext in ['jpeg', 'jpg', 'gif','png'] %}
+                                    <i class="bi bi bi-image fs-1"></i>
+
+                                    {% elif ext in ['ppt', 'pts'] %}
+                                    <i class="bi bi-file-earmark-ppt fs-1"></i>
+
+                                    {% elif ext in ['oml', 'oap'] %}
+                                    <i class="bi bi-file-earmark-code fs-1"></i>
+
+                                    {% elif ext in ['backup', 'bkp', 'bak', 'abk'] %}
+                                    <i class="bi bi-database-fill-down fs-1"></i>
+
+                                    {% elif ext in ['tmp', 'tm'] %}
+                                    <i class="bi bi-file-earmark fs-1"></i>
+
+                                    {% elif ext == 'sql' %}
+                                    <i class="bi bi-database-fill fs-1"></i>
+
+                                    {% elif ext == 'csv' %}
+                                    <i class="bi bi-filetype-csv fs-1"></i>
+
+                                    {% elif ext in ['ical', 'ics'] %}
+                                    <i class="bi bi-calendar-event-fill fs-1"></i>
+
+                                    {% else %}
+                                    <i class="bi bi-file-earmark-minus-fill fs-1"></i>
+                                    {% endif %}
+                                    {% endmacro %}
+
+
+                                    <div class="row g-3">
+                                        {% for resource in report.resources %}
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div
+                                                class="card h-100 border-4 {% if resource.suspicious %}border-warning{% endif %}">
+                                                <ul class="list-group list-group-flush">
+                                                    <li class="list-group-item d-flex flex-column align-items-center">
+                                                        {{ resource_icon(resource.path) }}
+                                                        <span class="text-break">{{ resource.path.split('/')[-1]
+                                                            }}</span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Dependencies Details-->
+                    <div class="modal fade" id="dependenciesdetails" data-bs-backdrop="static" data-bs-keyboard="false"
+                        tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Dependencies</h1>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+
+                                    <div class="row g-3">
+                                        {% for dependencie in report.dependencies %}
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <div class="card h-100 border-4">
+                                                <ul class="list-group list-group-flush">
+                                                    <li class="list-group-item d-flex flex-column align-items-center">
+
+                                                        <span class="text-break">/{{ dependencie.modulename }}</span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Request Analysis-->
+                    <div class="modal fade" id="requestanalysis" data-bs-backdrop="static" data-bs-keyboard="false"
+                        tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Requests made through the
+                                        screens</h1>
+                                    <button type="button" class="btn-close text-danger" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+
+                                        {% for request in report.appscreensRequests %}
+                                        <div class="col-12 mb-3">
+
+                                            <div class="card">
+
+                                                <!-- HEADER CLICÁVEL -->
+                                                <div class="card-header d-flex justify-content-between align-items-center"
+                                                    data-bs-toggle="collapse" data-bs-target="#screen-{{ loop.index }}"
+                                                    style="cursor: pointer;">
+
+                                                    <!-- Lado esquerdo: nome da tela -->
+                                                    <div>
+                                                        <i class="bi bi-window-fullscreen me-2"></i>
+
+                                                        <span class="">
+                                                            {{ request.path }}
+                                                        </span>
+                                                    </div>
+
+                                                </div>
+
+
+                                                <!-- CONTEÚDO COLAPSÁVEL -->
+                                                <div id="screen-{{ loop.index }}" class="collapse">
+
+                                                    {% if request.requests|length > 0 %}
+                                                    <ul class="list-group list-group-flush">
+
+                                                        {% for r in request.requests %}
+                                                        <li class="list-group-item">
+
+                                                            <!-- Método + URL -->
+                                                            <div class="fw-bold">
+                                                                <i class="bi bi-link-45deg me-1"></i>
+                                                                {{ r.method }}
+                                                            </div>
+
+                                                            <div class="small text-break mt-1">
+                                                                <span class="text-muted">URL:</span> {{ r.url }}
+                                                            </div>
+
+                                                            <!-- Status -->
+                                                            <div class="small mt-1">
+                                                                <span class="text-muted">Status:</span>
+                                                                {% if r.response.status == 200 %}
+                                                                <span class="text-success">{{ r.response.status
+                                                                    }}</span>
+                                                                {% else %}
+                                                                <span class="text-danger">{{ r.response.status }}</span>
+                                                                {% endif %}
+                                                            </div>
+
+                                                            <div class="row">
+                                                                <div class="col">
+                                                                    <h6 class="fw-bold">POST DATA</h6>
+                                                                    <pre id="postdata-{{ loop.index }}"
+                                                                        class="alert alert-success small p-2 rounded text-break overflow-auto"
+                                                                        style="white-space: pre-wrap; max-height: 300px; min-height: 300px !important;">
+                                                                        {{ r.post_data | safe }}
+                                                                    </pre>
+
+                                                                </div>
+
+                                                                <div class="col">
+                                                                    <h6 class="fw-bold">RESPONSE</h6>
+                                                                    <pre id="response-{{ loop.index }}"
+                                                                        class="alert alert-success small p-2 rounded text-break overflow-auto"
+                                                                        style="white-space: pre-wrap; max-height: 300px; min-height: 300px !important;">
+                                                                        {{ r.response.body | safe }}
+                                                                    </pre>
+                                                                </div>
+                                                            </div>
+
+
+                                                        </li>
+                                                        {% endfor %}
+
+                                                    </ul>
+
+                                                    {% else %}
+                                                    <div class="p-3 text-muted text-center">
+                                                        Nenhuma request encontrada
+                                                    </div>
+                                                    {% endif %}
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="mobileapps" class="mb-5">
+                    <h4>Mobile Apps</h4>
+                    <div class="row g-3">
+                        {% if report.mobile_apps and report.mobile_apps|length > 0 %}
+                        {% for app in report.mobile_apps %}
+                        <div class="col-12 col-md-6 col-lg-4">
+
+                            <div class="card h-100 shadow-sm ">
+
+                                <div class="card-body">
+
+                                    <!-- Nome -->
+                                    <h5 class="card-title d-flex align-items-center gap-2">
+                                        <i class="bi bi-phone-fill text-primary"></i>
+                                        {{ app.Name }}
+                                    </h5>
+
+                                    <!-- Descrição -->
+                                    <p class="card-text text-muted small">
+                                        {{ app.Description or "No description..." }}
+                                    </p>
+
+                                    <!-- Badges -->
+                                    <div class="mt-3 d-flex gap-2">
+
+                                        {% if app.HasIOSVersion %}
+                                        <span class="badge bg-success d-flex align-items-center gap-1">
+                                            <i class="bi bi-apple"></i> iOS
+                                        </span>
+                                        {% endif %}
+
+                                        {% if app.HasAndroidVersion %}
+                                        <span class="badge bg-success d-flex align-items-center gap-1">
+                                            <i class="bi bi-android2"></i> Android
+                                        </span>
+                                        {% endif %}
+
+                                        {% if not app.HasIOSVersion and not app.HasAndroidVersion %}
+                                        <span class="badge bg-secondary">No versions available.</span>
+                                        {% endif %}
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                        {% endfor %}
+                        {% else %}
+
+                        <!-- FALLBACK QUANDO NÃO HÁ APPS -->
+                        <div class="alert alert-warning" role="alert">
+                            <h6 class="alert-heading">No mobile app found.</h6>
+                            <p>No iOS or Android apps were found for this project.</p>
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+                </section>
+
+                <section id="clientvariables" class="mb-5">
+                    <h4>Client Variables</h4>
+
+                    {% if report.client_variables and report.client_variables|length > 0 %}
+
+                    <div class="table-responsive">
+                        <table class="table-success table table-hover align-middle mb-0 table-active table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Module</th>
+                                    <th>Type</th>
+                                    <th>Default Value</th>
+                                </tr>
+                            </thead>
+
+                            <tbody class="table-group-divider">
+                                {# --- PRIMEIRAS 3 LINHAS --- #}
+                                {% for var in report.client_variables[:3] %}
+                                <tr>
+                                    <td>{{ var.name }}</td>
+                                    <td>{{ var.module }}</td>
+                                    <td><span class="badge bg-secondary">{{ var.type }}</span></td>
+                                    <td>{{ var.default_value }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+
+                            {# --- RESTO DAS LINHAS (COLLAPSE) --- #}
+                            {% if report.client_variables|length > 3 %}
+                            <tbody class="collapse" id="clientvars-more">
+                                {% for var in report.client_variables[3:] %}
+                                <tr>
+                                    <td>{{ var.name }}</td>
+                                    <td>{{ var.module }}</td>
+                                    <td><span class="badge bg-secondary">{{ var.type }}</span></td>
+                                    <td>{{ var.default_value }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            {% endif %}
+
+                        </table>
+                    </div>
+
+                    {# --- BOTÃO MOSTRAR MAIS / MENOS --- #}
+                    {% if report.client_variables|length > 3 %}
+                    <div class="text-center p-2">
+                        <button class="btn btn-primary btn-sm rounded-pill px-4 toggle-clientvars"
+                            data-bs-toggle="collapse" data-bs-target="#clientvars-more">
+                            Show all client variables
+                        </button>
+
+                    </div>
+
+
+                    {% endif %}
+
+                    {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-exclamation-circle fs-1"></i>
+                        <p class="mt-3">No variables found.</p>
+                    </div>
+                    {% endif %}
+
+                </section>
+
+                <section id="platformcapabilities" class="mb-5">
+                    <h4>Platform Capabilities</h4>
+
+                    {% if report.platform_capabilities and report.platform_capabilities|length > 0 %}
+
+                    <div class="table-responsive">
+                        <table class="table-success table table-hover align-middle mb-0 table-active table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Available</th>
+                                </tr>
+                            </thead>
+
+                            <tbody class="table-group-divider">
+                                {# --- PRIMEIRAS 3 LINHAS --- #}
+                                {% for var in report.platform_capabilities[:3] %}
+                                <tr>
+                                    <td>{{ var.name }}</td>
+                                    <td><span
+                                            class="badge {{ 'text-bg-success' if var.value|lower == 'true' else 'text-bg-danger' }}">{{
+                                            var.value }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+
+                            {# --- RESTO DAS LINHAS (COLLAPSE) --- #}
+                            {% if report.platform_capabilities|length > 3 %}
+                            <tbody class="collapse" id="capabilities-more">
+                                {% for var in report.platform_capabilities[3:] %}
+                                <tr>
+                                    <td>{{ var.name }}</td>
+                                    <td><span
+                                            class="badge {{ 'text-bg-success' if var.value|lower == 'true' else 'text-bg-danger' }}">{{
+                                            var.value }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            {% endif %}
+
+                        </table>
+                    </div>
+
+                    {# --- BOTÃO MOSTRAR MAIS / MENOS --- #}
+                    {% if report.platform_capabilities|length > 3 %}
+                    <div class="text-center p-2">
+                        <button class="btn btn-primary btn-sm rounded-pill px-4 toggle-clientvars"
+                            data-bs-toggle="collapse" data-bs-target="#capabilities-more">
+                            Show all capabilities available
+                        </button>
+
+                    </div>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-exclamation-circle fs-1"></i>
+                        <p class="mt-3">No variables found.</p>
+                    </div>
+                    {% endif %}
+                </section>
+
+                <section id="referenceshealth" class="mb-5">
+                    <h4>References Health</h4>
+
+                    {% if report.references_health and report.references_health|length > 0 %}
+
+                    <div class="table-responsive">
+                        <table class="table-success table table-hover align-middle mb-0 table-active table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Module</th>
+                                </tr>
+                            </thead>
+
+                            <tbody class="table-group-divider">
+                                {# --- PRIMEIRAS 3 LINHAS --- #}
+                                {% for var in report.references_health[:3] %}
+                                <tr>
+                                    <td>{{ var }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+
+                            {# --- RESTO DAS LINHAS (COLLAPSE) --- #}
+                            {% if report.references_health|length > 3 %}
+                            <tbody class="collapse" id="referenceshealth-more">
+                                {% for var in report.references_health[3:] %}
+                                <tr>
+                                    <td>{{ var }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            {% endif %}
+
+                        </table>
+                    </div>
+
+                    {# --- BOTÃO MOSTRAR MAIS / MENOS --- #}
+                    {% if report.references_health|length > 3 %}
+                    <div class="text-center p-2">
+                        <button class="btn btn-primary btn-sm rounded-pill px-4 toggle-clientvars"
+                            data-bs-toggle="collapse" data-bs-target="#referenceshealth-more">
+                            Show all references
+                        </button>
+
+                    </div>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-exclamation-circle fs-1"></i>
+                        <p class="mt-3">No references found.</p>
+                    </div>
+                    {% endif %}
+                </section>
+
+                <section id="roleskey" class="mb-5">
+                    <h4>Roles & Keys</h4>
+
+                    {% if report.roles and report.roles|length > 0 %}
+
+                    <div class="table-responsive">
+                        <table class="table-success table table-hover align-middle mb-0 table-active table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Key</th>
+                                </tr>
+                            </thead>
+
+                            <tbody class="table-group-divider">
+                                {# --- PRIMEIRAS 3 LINHAS --- #}
+                                {% for var in report.roles[:3] %}
+                                <tr>
+                                    <td>{{ var.name }}</td>
+                                    <td><span class="badge text-bg-warning">{{
+                                            var.rolekey }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+
+                            {# --- RESTO DAS LINHAS (COLLAPSE) --- #}
+                            {% if report.roles|length > 3 %}
+                            <tbody class="collapse" id="rolekeys-more">
+                                {% for var in report.roles[3:] %}
+                                <tr>
+                                    <td>{{ var.name }}</td>
+                                    <td><span class="badge text-bg-warning">{{
+                                            var.rolekey }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            {% endif %}
+
+                        </table>
+                    </div>
+
+                    {# --- BOTÃO MOSTRAR MAIS / MENOS --- #}
+                    {% if report.roles|length > 3 %}
+                    <div class="text-center p-2">
+                        <button class="btn btn-primary btn-sm rounded-pill px-4 toggle-clientvars"
+                            data-bs-toggle="collapse" data-bs-target="#rolekeys-more">
+                            Show all roles available
+                        </button>
+
+                    </div>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-exclamation-circle fs-1"></i>
+                        <p class="mt-3">No roles found.</p>
+                    </div>
+                    {% endif %}
+                </section>
+            </main>
+
+        </div>
+    </main>
+    <script src="{{ url_for('static', filename='js/detail.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        const scrollSpy = new bootstrap.ScrollSpy(document.body, {
+            target: '#sidebar-menu',
+            offset: 80
+        });
+    </script>
+</body>
+
+</html>
