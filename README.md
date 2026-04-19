@@ -63,7 +63,7 @@ The analyzer is cross-platform and requires **Python 3.9+**.
 
 ### 1. Clone the repository
 ```bash
-git clone [https://github.com/your-username/outsystems-analyzer.git](https://github.com/your-username/outsystems-analyzer.git)
+git clone [https://github.com/5O4R3S/outsystems-analyzer.git](https://github.com/5O4R3S/outsystems-analyzer.git)
 cd outsystems-analyzer
 
 
