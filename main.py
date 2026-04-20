@@ -128,7 +128,7 @@ def scanningStream():
             yield "data: Looking for Mobile Apps...\n\n"
             functions.get_mobile_apps(accesskey)
         else:
-            yield "data: Skipping Mobile Apps [QUICK MODE ENABLED]...\n\n"
+            yield "data: Skipping Mobile Apps [QUICK MODE ENABLED]\n\n"
 
         yield "data: Looking for Platform Informations...\n\n"
         functions.get_platform_info(accesskey)
@@ -158,7 +158,7 @@ def scanningStream():
             yield "data: Checking each XHR on each page can take a while, grab a cofee...\n\n"
             functions.capture_all_screens_xhr(accesskey)
         else:
-            yield "data: Skipping Checking each XHR [QUICK MODE ENABLED]...\n\n"
+            yield "data: Skipping Checking each XHR [QUICK MODE ENABLED]\n\n"
             
         yield "data: Checking References Health...\n\n"
         functions.get_references_health(accesskey)
