@@ -1,0 +1,6 @@
+templates/** linguist-detectable=false
+*.html linguist-detectable=false
+static/**/*.js linguist-detectable=true
+*.py linguist-detectable=true
+*.sh linguist-detectable=true
+*.json linguist-documentation=true
