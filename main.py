@@ -1,15 +1,16 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, stream_with_context, Response, jsonify
-from database import init_db, get_scanhistory_items, delete_scanhistory_item, clear_all_scanhistory
+from database import init_db, get_scanhistory_items, delete_scanhistory_item, clear_all_scanhistory, ai_clear_cache
 from queries import db_insert_targetinformations
 from handleurl import resolve_url
-from dotenv import load_dotenv
+from dotenv import load_dotenv, set_key
 import os
 import uuid
 import functions
 from datetime import datetime
 import shutil
+import generative
 
-load_dotenv()
+load_dotenv(override=True)
 init_db()
 
 app = Flask(__name__)
@@ -41,10 +42,20 @@ def configPage():
         current_config["debug_mode"] = "debug_mode" in request.form
 
         functions.save_config(current_config)
+
+        # 2. NOVA LÓGICA: Salvar a API Key no .env
+        gemini_key = request.form.get("gemini_api_key")
+        if gemini_key:
+            # set_key(caminho_do_arquivo, nome_da_chave, valor)
+            # Isso cria o arquivo se não existir ou atualiza se já existir
+            set_key(".env", "GEMINI_API_KEY", gemini_key)
         
         return redirect(url_for('configPage'))
     
-    return render_template("config.html")
+    # Para o GET, vamos carregar a chave atual para mostrar no input (opcional)
+    current_key = os.getenv("GEMINI_API_KEY", "")
+    
+    return render_template("config.html", gemini_api_key=current_key)
 
 @app.route('/target', methods=['POST'])
 def verifyTarget():
@@ -239,6 +250,24 @@ def clear_all_history():
             return f"Error cleaning files: {e}", 500
     else:
         return "Failed to clear database", 500
+
+@app.route('/get-ai-advice', methods=['POST'])
+def ai_advice():
+    data = request.get_json()
+    problema = data.get('problem')
+    
+    # Chama a função que acabamos de ajustar
+    resposta_ia = generative.gemini_generative(problema)
+    
+    return jsonify({"advice": resposta_ia})
+
+@app.route('/clear-ai-cache', methods=['POST'])
+def clear_ai_cache():
+    if ai_clear_cache():
+        return jsonify({"status": "success", "message": "The AI cache has been successfully cleared."})
+    else:
+        return jsonify({"status": "error", "message": "Failed to clear AI cache."}), 500
+
 
 print(f"Running on http://127.0.0.1:5000")
 

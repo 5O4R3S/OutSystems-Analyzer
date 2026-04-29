@@ -43,6 +43,9 @@ This tool is designed to provide technical insights into OutSystems applications
 ### Main
 ![Main Dashboard](static/img/screen1.png)
 
+### AI Assistance
+![Main Dashboard](static/img/ai_screen1.png)
+
 ### Dashboard
 ![Main Dashboard](static/img/screen2.png)
 

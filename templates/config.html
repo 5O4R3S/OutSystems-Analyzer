@@ -61,6 +61,33 @@
                 
             </div>
         </section>
+
+        <section class="mt-2">
+            <div class="alert alert-success" role="alert">
+                <h4 class="alert-heading">Artificial Intelligence (AI)</h4>
+                <p>Use artificial intelligence to help you understand the detected technical debts.</p>
+                <hr>
+                    <div class="row mb-3">
+                        <label for="inputGeminiKey" class="col-sm-4 col-form-label">Gemini API Key</label>
+                        <div class="col-sm-8">
+                        <input name="gemini_api_key" type="text" class="form-control" id="inputGeminiKey" value="{{ gemini_api_key }}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="inputGeminiKey" class="col-sm-4 col-form-label">Clear AI suggestion cache.</label>
+                        <div class="col-sm-8">
+                        <button id="btn-clear-ai-cache" class="btn btn-warning">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+                            <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5"/>
+                            </svg> Clear Cache
+                        </button>
+                        </div>
+                    </div>
+
+            </div>
+        </section>
+
+
         <div class="d-flex justify-content-end">
             <a class="btn btn-outline-light d-inline-flex align-items-center me-4" href="/">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download me-2" viewBox="0 0 16 16">
@@ -81,6 +108,26 @@
 
     </div>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+document.getElementById('btn-clear-ai-cache').addEventListener('click', function() {
+    if (confirm('Are you sure you want to clear the entire AI cache? This cannot be undone.')) {
+        fetch('/clear-ai-cache', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Error processing request.');
+        });
+    }
+});
+</script>
 </body>
 
 </html>

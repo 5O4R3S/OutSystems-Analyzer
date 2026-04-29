@@ -16,7 +16,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 REPORT_DIR = "reports"
 SUSPICIOUS_WORDS = ["test","123","2","teste","dev","old","anonymous","screen1","screen2"]
-SUSPICIOUS_EXTENSIONS = {".xlsx",".xls",".doc",".docx",".aspx",".xml",".pdf",".exe",".txt",".zip",".ppt",".pts",".7z",".rar",".oml",".oap",".backup",".bkp","backup","bkp",".sql",".abk",".tmp",".bak",".tm",".csv",".ical",".ics"}
+SUSPICIOUS_EXTENSIONS = {".xlsx",".xls",".doc",".docx",".aspx",".xml",".pdf",".exe",".txt",".zip",".ppt",".pts",".7z",".rar",".oml",".oap",".backup",".bkp","backup","bkp",".sql",".abk",".tmp",".bak",".tm",".csv",".ical",".ics",".bin"}
 CONFIG = {}
 
 def load_config():
