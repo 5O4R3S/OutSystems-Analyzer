@@ -166,7 +166,7 @@ def scanningStream():
         functions.extract_screen_variables(accesskey)
 
         if not config.get("quick_mode", False):
-            yield "data: Checking each XHR on each page can take a while, grab a cofee...\n\n"
+            yield "data: Checking the XHR requests for each page takes a while, so grab a coffee...\n\n"
             functions.capture_all_screens_xhr(accesskey)
         else:
             yield "data: Skipping Checking each XHR [QUICK MODE ENABLED]\n\n"

@@ -338,8 +338,9 @@ def get_moduleinfo_from_target(subdomain: str, domain: str, modulename: str, acc
         return False
 
 def get_app_definitions(accesskey: str) -> bool:
-    _, report_file = get_report_paths(accesskey)
+    data_file, report_file = get_report_paths(accesskey)
 
+    report_map = load_json(data_file)
     report = load_json(report_file)
     if report is None:
         print(f"Report not found: {report_file}")
@@ -356,7 +357,15 @@ def get_app_definitions(accesskey: str) -> bool:
     sub = f"{subdomain}." if subdomain else ""
     base_url = f"https://{sub}{domain}"
 
-    url = f"{base_url}/{modulename}/scripts/{modulename}.appDefinition.js"
+    search_pattern = f"{modulename.lower()}.appDefinition"
+    url_versions = report_map.get("manifest", {}).get("urlVersions", {})
+    app_definitions = next(
+        (path for path in url_versions.keys()
+        if search_pattern in path),
+        None
+    )
+
+    url = f"{base_url}{app_definitions}"
 
     headers = build_headers({
         "Accept": "*/*",
@@ -536,9 +545,10 @@ def get_app_resources(accesskey: str) -> bool:
     return True
 
 def get_react_version(accesskey: str) -> bool:
-    _, report_file = get_report_paths(accesskey)
+    report_data, report_file = get_report_paths(accesskey)
+    
+    report_map = load_json(report_data)
     report = load_json(report_file)
-
     if report is None:
         print(f"Report not found: {report_file}")
         return False
@@ -554,7 +564,15 @@ def get_react_version(accesskey: str) -> bool:
     subdomain_part = f"{subdomain}." if subdomain else ""
     environment = f"https://{subdomain_part}{domain}"
 
-    js_url = f"{environment}/{modulename}/scripts/OutSystemsReactView.js"
+    search_pattern = f"OutSystemsReactView"
+    url_versions = report_map.get("manifest", {}).get("urlVersions", {})
+    react_view = next(
+        (path for path in url_versions.keys()
+        if search_pattern in path),
+        None
+    )
+
+    js_url = f"{environment}{react_view}"
 
     headers = build_headers({
         "Accept": "*/*",
@@ -572,7 +590,7 @@ def get_react_version(accesskey: str) -> bool:
     match = re.search(r'e\.version\s*=\s*"([^"]+)"', js_content)
 
     if not match:
-        print("The JS version could not be found.")
+        print("The react version could not be found.")
         return False
 
     version = match.group(1)
@@ -589,7 +607,8 @@ def get_react_version(accesskey: str) -> bool:
 
 def get_references_health(accesskey: str) -> bool:
 
-    _, report_file = get_report_paths(accesskey)
+    report_data, report_file = get_report_paths(accesskey)
+    report_map = load_json(report_data)
     report = load_json(report_file)
 
     if report is None:
@@ -607,7 +626,15 @@ def get_references_health(accesskey: str) -> bool:
     subdomain_part = f"{subdomain}." if subdomain else ""
     environment = f"https://{subdomain_part}{domain}"
 
-    js_url = f"{environment}/{modulename}/scripts/{modulename}.referencesHealth.js"
+    search_pattern = f"{modulename.lower()}.referencesHealth"
+    url_versions = report_map.get("manifest", {}).get("urlVersions", {})
+    client_health = next(
+        (path for path in url_versions.keys()
+        if search_pattern in path),
+        None
+    )
+
+    js_url = f"{environment}{client_health}"
 
     headers = build_headers({
         "Accept": "*/*",
@@ -639,8 +666,9 @@ def get_references_health(accesskey: str) -> bool:
     return True
 
 def get_client_variables(accesskey: str) -> bool:
+    report_data, report_file = get_report_paths(accesskey)
 
-    _, report_file = get_report_paths(accesskey)
+    report_map = load_json(report_data)
     report = load_json(report_file)
 
     if report is None:
@@ -658,7 +686,15 @@ def get_client_variables(accesskey: str) -> bool:
     subdomain_part = f"{subdomain}." if subdomain else ""
     environment = f"https://{subdomain_part}{domain}"
 
-    js_url = f"{environment}/{modulename}/scripts/{modulename}.clientVariables.js"
+    search_pattern = f"{modulename.lower()}.clientVariables"
+    url_versions = report_map.get("manifest", {}).get("urlVersions", {})
+    client_variables = next(
+        (path for path in url_versions.keys()
+        if search_pattern in path),
+        None
+    )
+
+    js_url = f"{environment}{client_variables}"
 
     headers = build_headers({
         "Accept": "*/*",
@@ -1542,7 +1578,8 @@ def capture_all_screens_xhr(accesskey: str) -> bool:
     return True
 
 def get_roles(accesskey: str) -> bool:
-    _, report_file = get_report_paths(accesskey)
+    report_data, report_file = get_report_paths(accesskey)
+    report_map = load_json(report_data)
     report = load_json(report_file)
 
     if report is None:
@@ -1560,7 +1597,15 @@ def get_roles(accesskey: str) -> bool:
     subdomain_part = f"{subdomain}." if subdomain else ""
     environment = f"https://{subdomain_part}{domain}"
 
-    js_url = f"{environment}/{modulename}/scripts/{modulename}.controller.js"
+    search_pattern = f"{modulename.lower()}.controller"
+    url_versions = report_map.get("manifest", {}).get("urlVersions", {})
+    client_controller = next(
+        (path for path in url_versions.keys()
+        if search_pattern in path),
+        None
+    )
+
+    js_url = f"{environment}{client_controller}"
 
     headers = build_headers({
         "Accept": "*/*",
@@ -1687,3 +1732,4 @@ def get_cloudconnet_version(accesskey: str) -> bool:
     if CONFIG.get("debug_mode", True):
         print(f"Checking and saving Cloud Connect version: {version_value}")
     return True
+
