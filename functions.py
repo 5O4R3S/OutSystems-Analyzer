@@ -357,7 +357,7 @@ def get_app_definitions(accesskey: str) -> bool:
     sub = f"{subdomain}." if subdomain else ""
     base_url = f"https://{sub}{domain}"
 
-    search_pattern = f"{modulename.lower()}.appDefinition"
+    search_pattern = f"{modulename}.appDefinition"
     url_versions = report_map.get("manifest", {}).get("urlVersions", {})
     app_definitions = next(
         (path for path in url_versions.keys()
@@ -626,7 +626,7 @@ def get_references_health(accesskey: str) -> bool:
     subdomain_part = f"{subdomain}." if subdomain else ""
     environment = f"https://{subdomain_part}{domain}"
 
-    search_pattern = f"{modulename.lower()}.referencesHealth"
+    search_pattern = f"{modulename}.referencesHealth"
     url_versions = report_map.get("manifest", {}).get("urlVersions", {})
     client_health = next(
         (path for path in url_versions.keys()
@@ -686,7 +686,7 @@ def get_client_variables(accesskey: str) -> bool:
     subdomain_part = f"{subdomain}." if subdomain else ""
     environment = f"https://{subdomain_part}{domain}"
 
-    search_pattern = f"{modulename.lower()}.clientVariables"
+    search_pattern = f"{modulename}.clientVariables"
     url_versions = report_map.get("manifest", {}).get("urlVersions", {})
     client_variables = next(
         (path for path in url_versions.keys()
@@ -1597,7 +1597,7 @@ def get_roles(accesskey: str) -> bool:
     subdomain_part = f"{subdomain}." if subdomain else ""
     environment = f"https://{subdomain_part}{domain}"
 
-    search_pattern = f"{modulename.lower()}.controller"
+    search_pattern = f"{modulename}.controller"
     url_versions = report_map.get("manifest", {}).get("urlVersions", {})
     client_controller = next(
         (path for path in url_versions.keys()
@@ -1733,3 +1733,6 @@ def get_cloudconnet_version(accesskey: str) -> bool:
         print(f"Checking and saving Cloud Connect version: {version_value}")
     return True
 
+if __name__ == '__main__':
+    success = get_app_definitions("e539202b-0dbf-4731-ae58-783c9438ef5f")
+    print(f"{success}")

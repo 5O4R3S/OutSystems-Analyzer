@@ -132,37 +132,37 @@
                             <div class="col">
                                 <p>
                                     <span class="fw-bold small">Platform</span></br>
-                                    <span class="fst-italic">{{ report.platform_info.Version }} <span
+                                    <span class="fst-italic">{{ report.platform_info.Version | default('N/A', True)}} <span
                                             class="badge text-bg-primary">version</span></br>{{
-                                        report.platform_info.Serial }} <span
+                                        report.platform_info.Serial | default('N/A', True)}} <span
                                             class="badge text-bg-warning">serial</span></span>
                                 </p>
                                 <p>
                                     <span class="fw-bold small">Installation</span></br>
-                                    <span class="fst-italic">{{ report.installation_info.InstallationKind }}</br>{{
-                                        report.installation_info.DatabaseKind }} <span
+                                    <span class="fst-italic">{{ report.installation_info.InstallationKind | default('N/A', True)}}</br>{{
+                                        report.installation_info.DatabaseKind | default('N/A', True)}} <span
                                             class="badge text-bg-primary">database</span></br>{{
-                                        report.installation_info.ApplicationServerType }} <span
+                                        report.installation_info.ApplicationServerType | default('N/A', True)}} <span
                                             class="badge text-bg-primary">server</span></span>
                                 </p>
                                 <p>
                                     <span class="fw-bold small">Environment</span></br>
-                                    <span class="fst-italic">{{ report.target.environmentName }}</br>{{
-                                        report.target.environmentKey }}</span>
+                                    <span class="fst-italic">{{ report.target.environmentName | default('N/A', True)}}</br>{{
+                                        report.target.environmentKey | default('N/A', True)}}</span>
                                 </p>
                             </div>
                             <div class="col">
                                 <p>
                                     <span class="fw-bold small">Tenant</span></br>
-                                    <span class="fst-italic">{{ report.target.userTenantProvider }}</span>
+                                    <span class="fst-italic">{{ report.target.userTenantProvider | default('N/A', True)}}</span>
                                 </p>
                                 <p>
                                     <span class="fw-bold small">React Version</span></br>
-                                    <span class="fst-italic">{{ report.target.react_version }}</span>
+                                    <span class="fst-italic">{{ report.target.react_version | default('N/A', True)}}</span>
                                 </p>
                                 <p>
                                     <span class="fw-bold small">Cloud Connect Version</span></br>
-                                    <span class="fst-italic">{{ report.target.cloudconnect_version }}</span>
+                                    <span class="fst-italic">{{ report.target.cloudconnect_version | default('N/A', True)}}</span>
                                 </p>
                             </div>
                         </div>
