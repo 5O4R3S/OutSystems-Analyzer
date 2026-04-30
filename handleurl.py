@@ -60,3 +60,7 @@ def resolve_url(url: str) -> dict | None:
         'subdomain': subdomain,
         'modulename': modulename,
     }
+
+if __name__ == '__main__':
+    success = resolve_url("https://www.cmvm.pt/PInstitucional/")
+    print(f"{success}")

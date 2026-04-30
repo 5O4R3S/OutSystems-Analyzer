@@ -12,7 +12,7 @@
 
 This tool is designed to provide technical insights into OutSystems applications. If you are a customer and find vulnerabilities or need expert guidance on how to remediate identified risks:
 
-* **Expert Assistance:** Please consider reaching out to an [OutSystems MVP](https://www.outsystems.com/community/mvps/) member. They are recognized experts who can provide high-level architectural and security advice.
+* **Expert Assistance:** Please consider reaching out to an [OutSystems MVP](https://www.outsystems.com/community/advocacy/members/?f=1) member. They are recognized experts who can provide high-level architectural and security advice.
 * **Contributions:** If you have suggestions or found a bug in the analyzer, feel free to open an **Issue** or a **Pull Request**.
 
 ---

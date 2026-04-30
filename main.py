@@ -60,39 +60,36 @@ def configPage():
 @app.route('/target', methods=['POST'])
 def verifyTarget():
     urlTarget = request.form.get('urlToScan')
+    
     if not urlTarget:
-        flash("The URL was not provided; please fill in the field to continue.","error")
+        flash("The URL was not provided; please fill in the field to continue.", "error")
         return redirect(url_for('homePage'))
     
     urlSplited = resolve_url(urlTarget)
     if urlSplited is None:
-        flash("The URL is invalid or unrecognized.","error")
+        flash("The URL is invalid or unrecognized.", "error")
         return redirect(url_for("homePage"))
     
-    domain = urlSplited.get('domain','')
-    subdomain = urlSplited.get('subdomain','')
-    modulename = urlSplited.get('modulename','')
+    domain = urlSplited.get('domain', '')
+    subdomain = urlSplited.get('subdomain', '')
+    modulename = urlSplited.get('modulename', '')
 
     accesskey = str(uuid.uuid4())
 
     create_pre_files = functions.get_moduleinfo_from_target(subdomain, domain, modulename, accesskey)
 
-    # ODC
     if create_pre_files == "odc_environment":
         flash("Cannot scan ODC environments.", "error")
         return redirect(url_for("homePage"))
 
-    # Error
-    if create_pre_files is None:
-        flash("There was an error while saving the data for analysis.", "error")
+    if create_pre_files is False:
+        flash("The target is unavailable, blocked our access, or a connection error occurred.", "error")
         return redirect(url_for("homePage"))
 
-    # OK
     if db_insert_targetinformations(domain, subdomain, modulename, accesskey):
         return redirect(url_for("scanningPage", accesskey=accesskey))
 
-    # NOK
-    flash("There was an error while saving the data for analysis.", "error")
+    flash("There was an error while saving target information to the database.", "error")
     return redirect(url_for("homePage"))
 
 @app.route('/scanning', methods=['GET'])
@@ -267,7 +264,6 @@ def clear_ai_cache():
         return jsonify({"status": "success", "message": "The AI cache has been successfully cleared."})
     else:
         return jsonify({"status": "error", "message": "Failed to clear AI cache."}), 500
-
 
 print(f"Running on http://127.0.0.1:5000")
 

@@ -132,14 +132,15 @@
                             <div class="col">
                                 <p>
                                     <span class="fw-bold small">Platform</span></br>
-                                    <span class="fst-italic">{{ report.platform_info.Version | default('N/A', True)}} <span
-                                            class="badge text-bg-primary">version</span></br>{{
+                                    <span class="fst-italic">{{ report.platform_info.Version | default('N/A', True)}}
+                                        <span class="badge text-bg-primary">version</span></br>{{
                                         report.platform_info.Serial | default('N/A', True)}} <span
                                             class="badge text-bg-warning">serial</span></span>
                                 </p>
                                 <p>
                                     <span class="fw-bold small">Installation</span></br>
-                                    <span class="fst-italic">{{ report.installation_info.InstallationKind | default('N/A', True)}}</br>{{
+                                    <span class="fst-italic">{{ report.installation_info.InstallationKind |
+                                        default('N/A', True)}}</br>{{
                                         report.installation_info.DatabaseKind | default('N/A', True)}} <span
                                             class="badge text-bg-primary">database</span></br>{{
                                         report.installation_info.ApplicationServerType | default('N/A', True)}} <span
@@ -147,22 +148,26 @@
                                 </p>
                                 <p>
                                     <span class="fw-bold small">Environment</span></br>
-                                    <span class="fst-italic">{{ report.target.environmentName | default('N/A', True)}}</br>{{
+                                    <span class="fst-italic">{{ report.target.environmentName | default('N/A',
+                                        True)}}</br>{{
                                         report.target.environmentKey | default('N/A', True)}}</span>
                                 </p>
                             </div>
                             <div class="col">
                                 <p>
                                     <span class="fw-bold small">Tenant</span></br>
-                                    <span class="fst-italic">{{ report.target.userTenantProvider | default('N/A', True)}}</span>
+                                    <span class="fst-italic">{{ report.target.userTenantProvider | default('N/A',
+                                        True)}}</span>
                                 </p>
                                 <p>
                                     <span class="fw-bold small">React Version</span></br>
-                                    <span class="fst-italic">{{ report.target.react_version | default('N/A', True)}}</span>
+                                    <span class="fst-italic">{{ report.target.react_version | default('N/A',
+                                        True)}}</span>
                                 </p>
                                 <p>
                                     <span class="fw-bold small">Cloud Connect Version</span></br>
-                                    <span class="fst-italic">{{ report.target.cloudconnect_version | default('N/A', True)}}</span>
+                                    <span class="fst-italic">{{ report.target.cloudconnect_version | default('N/A',
+                                        True)}}</span>
                                 </p>
                             </div>
                         </div>
@@ -388,38 +393,39 @@
 
 
                                     <div class="row g-3">
-    {% for resource in report.resources %}
-    <div class="col-6 col-md-4 col-lg-3">
-        <!-- Adicionamos 'position-relative' no card para ancorar o robô -->
-        <div class="card h-100 border-4 shadow-sm position-relative {% if resource.suspicious %}border-warning{% endif %}">
-            
-            {% if resource.suspicious %}
-            <!-- Botão da IA: Posicionado de forma absoluta no canto superior do card -->
-            <a href="#" class="position-absolute top-0 end-0 m-1 text-danger ai-logic-trigger" 
-               data-problem="My application contains a file with public access via URL that has been flagged as suspicious; the file path is '{{ resource.path }}'. What are the security risks associated with publicly exposing this type of file?"
-               data-bs-toggle="modal" 
-               data-bs-target="#aiAdviceModal"
-               style="text-decoration: none; z-index: 10;"
-               title="Ask the AI">
-                <i class="bi bi-stars fs-5"></i>
-            </a>
-            {% endif %}
+                                        {% for resource in report.resources %}
+                                        <div class="col-6 col-md-4 col-lg-3">
+                                            <!-- Adicionamos 'position-relative' no card para ancorar o robô -->
+                                            <div
+                                                class="card h-100 border-4 shadow-sm position-relative {% if resource.suspicious %}border-warning{% endif %}">
 
-            <div class="card-body d-flex flex-column align-items-center justify-content-center text-center p-3">
-                <!-- Ícone do arquivo (via função personalizada) -->
-                <div class="mb-2">
-                    {{ resource_icon(resource.path) }}
-                </div>
-                
-                <!-- Nome do arquivo com quebra de linha inteligente -->
-                <small class="text-muted fw-bold text-break">
-                    {{ resource.path.split('/')[-1] }}
-                </small>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
+                                                {% if resource.suspicious %}
+                                                <!-- Botão da IA: Posicionado de forma absoluta no canto superior do card -->
+                                                <a href="#"
+                                                    class="position-absolute top-0 end-0 m-1 text-danger ai-logic-trigger"
+                                                    data-problem="My application contains a file with public access via URL that has been flagged as suspicious; the file path is '{{ resource.path }}'. What are the security risks associated with publicly exposing this type of file?"
+                                                    data-bs-toggle="modal" data-bs-target="#aiAdviceModal"
+                                                    style="text-decoration: none; z-index: 10;" title="Ask the AI">
+                                                    <i class="bi bi-stars fs-5"></i>
+                                                </a>
+                                                {% endif %}
+
+                                                <div
+                                                    class="card-body d-flex flex-column align-items-center justify-content-center text-center p-3">
+                                                    <!-- Ícone do arquivo (via função personalizada) -->
+                                                    <div class="mb-2">
+                                                        {{ resource_icon(resource.path) }}
+                                                    </div>
+
+                                                    <!-- Nome do arquivo com quebra de linha inteligente -->
+                                                    <small class="text-muted fw-bold text-break">
+                                                        {{ resource.path.split('/')[-1] }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
 
                                 </div>
                             </div>
@@ -659,14 +665,14 @@
                                     <td>
                                         {{ var.default_value }}
 
-                                        {% if var.default_value and var.default_value != "" and var.default_value != "''" and var.default_value != '""' %}
-                                            <a href="#" class="ms-2 text-danger ai-logic-trigger" 
+                                        {% if var.default_value and var.default_value != "" and var.default_value !=
+                                        "''" and var.default_value != '""' %}
+                                        <a href="#" class="ms-2 text-danger ai-logic-trigger"
                                             data-problem="The Client Variable '{{ var.name }}' in the module '{{ var.module }}' has the default value: '{{ var.default_value }}. Is there any risk?'."
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#aiAdviceModal"
+                                            data-bs-toggle="modal" data-bs-target="#aiAdviceModal"
                                             style="text-decoration: none;">
-                                                <i class="bi bi-stars" title="Ask the AI"></i>
-                                            </a>
+                                            <i class="bi bi-stars" title="Ask the AI"></i>
+                                        </a>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -892,80 +898,35 @@
 
         </div>
     </main>
-        <div class="modal fade" id="aiAdviceModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-scrollable">
-                <div class="modal-content border-0 shadow">
-                    <div class="modal-header text-white">
-                        <h5 class="modal-title"><i class="bi bi-robot me-2"></i>IA Helper</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-toggle="modal" data-bs-target="#aiAdviceModal"></button>
+    <div class="modal fade" id="aiAdviceModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header text-white">
+                    <h5 class="modal-title"><i class="bi bi-robot me-2"></i>IA Helper</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-toggle="modal"
+                        data-bs-target="#aiAdviceModal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="ai-loading" class="text-center d-none">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2">Consulting an agent...</p>
                     </div>
-                    <div class="modal-body p-4">
-                        <div id="ai-loading" class="text-center d-none">
-                            <div class="spinner-border text-primary" role="status"></div>
-                            <p class="mt-2">Consulting an agent...</p>
-                        </div>
-                        <div id="ai-content" style="white-space: pre-line;">
-                            </div>
+                    <div id="ai-content" style="white-space: pre-line;">
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
+    </div>
     <script src="{{ url_for('static', filename='js/detail.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script>
-            const scrollSpy = new bootstrap.ScrollSpy(document.body, {
-                target: '#sidebar-menu',
-                offset: 80
-            });
-
-
-            document.addEventListener('DOMContentLoaded', function() {
-        // 1. Seleciona os elementos do modal
-        const aiModal = document.getElementById('aiAdviceModal');
-        const contentBox = document.getElementById('ai-content');
-        const loadingIndicator = document.getElementById('ai-loading');
-
-        // 2. Escuta o clique nos ícones do robô
-        document.querySelectorAll('.ai-logic-trigger').forEach(trigger => {
-            trigger.addEventListener('click', async function(e) {
-                e.preventDefault();
-                
-                // Pega a descrição do problema que está no atributo data-problem
-                const problemDescription = this.getAttribute('data-problem');
-                
-                // Reseta o modal: limpa texto antigo e mostra o carregando
-                contentBox.innerText = '';
-                loadingIndicator.classList.remove('d-none');
-
-                try {
-                    // 3. Chama a rota do Flask
-                    const response = await fetch('/get-ai-advice', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ problem: problemDescription })
-                    });
-
-                    if (!response.ok) throw new Error('Erro na requisição');
-
-                    const data = await response.json();
-                    
-                    // 4. Exibe o resultado da IA
-                    contentBox.innerText = data.advice;
-                } catch (error) {
-                    contentBox.innerText = "Ops! Não consegui falar com a IA. Verifique se sua chave API está correta nas Configurações.";
-                    console.error('Erro:', error);
-                } finally {
-                    // Esconde o carregando
-                    loadingIndicator.classList.add('d-none');
-                }
-            });
+        const scrollSpy = new bootstrap.ScrollSpy(document.body, {
+            target: '#sidebar-menu',
+            offset: 80
         });
-    });
     </script>
 </body>
 

@@ -8,9 +8,10 @@ from datetime import datetime
 import socket
 from structure import get_struct_report_file
 import xml.etree.ElementTree as ET
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError
 import random
 import time
+from urllib.parse import urlparse, urlunparse
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -228,113 +229,180 @@ def create_empty_report_file(folder: str,accesskey: str, subdomain: str, domain:
         return None
 
 def http_get(url, headers=None):
-    attempts = CONFIG.get("max_attempts", 1)
+    attempts = CONFIG.get("max_attempts", 3)
     timeout = CONFIG.get("request_timeout", 60)
+    
+    def toggle_www(target_url):
+        parsed = urlparse(target_url)
+        netloc = parsed.netloc
+        if netloc.startswith("www."):
+            new_netloc = netloc.replace("www.", "", 1)
+        else:
+            new_netloc = f"www.{netloc}"
+        return urlunparse(parsed._replace(netloc=new_netloc))
 
-    for attempt in range(1, attempts + 1):
-        try:
-            response = requests.get(
-                url,
-                headers=headers,
-                verify=False,
-                timeout=timeout
-            )
-            response.raise_for_status()
-            if CONFIG.get("debug_mode", True):
-                print(f"Requesting GET method - response: {response}")
-            return response
+    urls_to_try = [url, toggle_www(url)]
+    
+    for current_url in urls_to_try:
+        if CONFIG.get("debug_mode", True):
+            print(f"--- Testing Host: {urlparse(current_url).netloc} ---")
+            
+        for attempt in range(1, attempts + 1):
+            try:
+                response = requests.get(
+                    current_url,
+                    headers=headers,
+                    verify=False,
+                    timeout=timeout
+                )
 
-        except Exception as e:
-            print(f"Tentativa {attempt}/{attempts} falhou: {e}")
+                response.raise_for_status()
+                
+                if CONFIG.get("debug_mode", True):
+                    print(f"Success in URL: {current_url}")
+                return response
 
-            if attempt == attempts:
-                return None
+            except requests.exceptions.ConnectionError as e:
+                if CONFIG.get("debug_mode", True):
+                    print(f"Connection/DNS erros on {current_url} (attempt {attempt}/{attempts})")
+                
+                if "NameResolutionError" in str(e) or "Failed to resolve" in str(e):
+                    if CONFIG.get("debug_mode", True):
+                        print("Resolution failure detected, switching hosts...")
+                    break 
+                
+                if attempt == attempts:
+                    break
+
+            except requests.exceptions.HTTPError as e:
+                print(f"HTTP error: {current_url}: {e}")
+                if attempt == attempts:
+                    break
+                    
+    return None
 
 def http_post(url, data=None, json=None, headers=None):
-    attempts = CONFIG.get("max_attempts", 1)
+    attempts = CONFIG.get("max_attempts", 3)
     timeout = CONFIG.get("request_timeout", 60)
-
-    for attempt in range(1, attempts + 1):
-        try:
-            response = requests.post(
-                url,
-                data=data,
-                json=json,
-                headers=headers,
-                verify=False,
-                timeout=timeout
-            )
-            response.raise_for_status()
-            if CONFIG.get("debug_mode", True):
-                print(f"Requesting GET Method - response: {response}")
-            return response
-
-        except Exception as e:
-            print(f"Attempt {attempt}/{attempts} failed: {e}")
-
-            if attempt == attempts:
-                return None
-
-def get_moduleinfo_from_target(subdomain: str, domain: str, modulename: str, accesskey: str) -> str | None:
-    try:
-        url_moduleinfo = f"{build_url_application(subdomain, domain, modulename)}moduleservices/moduleinfo"
-        headers = build_headers({
-            "Content-Type": "application/json"
-        })
-
-        response = http_get(url_moduleinfo, headers)
-        if CONFIG.get("debug_mode", True):
-            print(f"Looking for information about the module - response: {response}")
-
-        if response.status_code == 200:
-            data = response.json()
-
-            # ODC Verify
-            manifest = data.get("manifest",{})
-            url_mappings = manifest.get("urlMappings",{})
-            is_odc = any(
-                key.endswith("_RedirectLogin") for key in url_mappings.keys()
-            )
-            if is_odc:
-                return "odc_environment"
-        
-        elif response.status_code == 403:
-            print(f"The target environment has blocked our access.")
-            return False
-        
+    
+    def toggle_www(target_url):
+        parsed = urlparse(target_url)
+        netloc = parsed.netloc
+        if netloc.startswith("www."):
+            new_netloc = netloc.replace("www.", "", 1)
         else:
-            print(f"The target is not available.")
+            new_netloc = f"www.{netloc}"
+        return urlunparse(parsed._replace(netloc=new_netloc))
+
+    urls_to_try = [url, toggle_www(url)]
+    
+    for current_url in urls_to_try:
+        if CONFIG.get("debug_mode", True):
+            print(f"--- Trying to host: {urlparse(current_url).netloc} ---")
+            
+        for attempt in range(1, attempts + 1):
+            try:
+                response = requests.post(
+                    current_url,
+                    data=data,
+                    json=json, 
+                    headers=headers,
+                    verify=False,
+                    timeout=timeout
+                )
+                
+                response.raise_for_status()
+                
+                if CONFIG.get("debug_mode", True):
+                    print(f"Success in URL: {current_url}")
+                return response
+
+            except requests.exceptions.ConnectionError as e:
+                if CONFIG.get("debug_mode", True):
+                    print(f"Connection/DNS error on {current_url} (Attempt {attempt}/{attempts})")
+                
+                # Se o DNS falhou (NameResolutionError), pula para a próxima URL imediatamente
+                if "NameResolutionError" in str(e) or "Failed to resolve" in str(e):
+                    if CONFIG.get("debug_mode", True):
+                        print("Resolution failure detected, switching hosts...")
+                    break 
+                
+                if attempt == attempts:
+                    break
+
+            except requests.exceptions.HTTPError as e:
+                print(f"HTTP error: {e}")
+                if attempt == attempts:
+                    break
+                    
+    return None
+
+def get_moduleinfo_from_target(subdomain: str, domain: str, modulename: str, accesskey: str) -> bool | str:
+    # 1. Definimos os domínios para tentar (Original e Alternativo com/sem www)
+    domains_to_try = [domain]
+    if domain.startswith("www."):
+        domains_to_try.append(domain.replace("www.", "", 1))
+    else:
+        domains_to_try.append(f"www.{domain}")
+
+    data = None
+    final_domain = domain
+
+    try:
+        # 2. Loop de tentativas
+        for current_domain in domains_to_try:
+            url_moduleinfo = f"{build_url_application(subdomain, current_domain, modulename)}moduleservices/moduleinfo"
+            headers = build_headers({"Content-Type": "application/json"})
+            
+            if CONFIG.get("debug_mode", True):
+                print(f"Trying URL: {url_moduleinfo}")
+
+            response = http_get(url_moduleinfo, headers)
+
+            # Se a resposta falhar (None ou erro de conexão), tenta o próximo domínio
+            if response is None or response.status_code != 200:
+                if CONFIG.get("debug_mode", True):
+                    print(f"Failed attempt with: {current_domain}")
+                continue 
+            
+            # Se chegamos aqui, o status é 200. Sucesso na conexão!
+            try:
+                data = response.json()
+                final_domain = current_domain # Guardamos qual funcionou
+                break # Sai do loop de tentativas
+            except ValueError:
+                continue
+
+        # 3. Validação após as tentativas
+        if data is None:
+            print(f"Could not resolve or connect to {domain} (tried with and without www).")
             return False
 
+        # --- Lógica ODC Verify ---
+        manifest = data.get("manifest", {})
+        url_mappings = manifest.get("urlMappings", {})
+        is_odc = any(key.endswith("_RedirectLogin") for key in url_mappings.keys())
+        
+        if is_odc:
+            return "odc_environment"
+
+        # --- Processamento de Arquivos ---
         folders = os.path.join(REPORT_DIR, accesskey, "pages_js")
         os.makedirs(folders, exist_ok=True)
-        if CONFIG.get("debug_mode", True):
-            print(f"Creating a folder for the current report: {folders}")
 
         default_folder = os.path.join(REPORT_DIR, accesskey)
-        if CONFIG.get("debug_mode", True):
-            print(f"Root path of the current report: {default_folder}")
-
         folder_path = os.path.join(default_folder, f"{accesskey}_map.json")
-        if CONFIG.get("debug_mode", True):
-            print(f"Saving the map from the current report: {folder_path}")
 
         with open(folder_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
         
-        report_path = create_empty_report_file(default_folder, accesskey, subdomain, domain, modulename)
+        # Usamos o final_domain que realmente funcionou para o relatório
+        report_path = create_empty_report_file(default_folder, accesskey, subdomain, final_domain, modulename)
         
-        if report_path is None:
-            return False
-        else:
-            return True
+        return True if report_path else False
     
-    except requests.exceptions.RequestException as e:
-        print(f"There was an error in the request: {e}")
-        return False
-    
-    except ValueError:
-        print(f"The response is not a valid JSON")
+    except Exception as e:
+        print(f"An unexpected error occurred during analysis: {e}")
         return False
 
 def get_app_definitions(accesskey: str) -> bool:
@@ -732,7 +800,6 @@ def get_client_variables(accesskey: str) -> bool:
     return True
 
 def get_mobile_apps(accesskey: str) -> bool:
-
     _, report_file = get_report_paths(accesskey)
     report = load_json(report_file)
 
@@ -744,40 +811,49 @@ def get_mobile_apps(accesskey: str) -> bool:
     domain = report["target"].get("domain", "")
     modulename = report["target"].get("modulename", "")
 
-    if not domain or not modulename:
-        print("Missing 'domain' or 'modulename' in report.")
+    if not domain:
+        print("Missing 'domain' in report.")
         return False
 
     subdomain_part = f"{subdomain}." if subdomain else ""
     environment = f"https://{subdomain_part}{domain}"
-
     json_url = f"{environment}/NativeAppBuilder/rest/NativeApps/GetNativeApps"
 
     headers = build_headers({
         "Content-Type": "application/json"
     })
 
+    response = http_get(json_url, headers)
+
+    if response is None:
+        if CONFIG.get("debug_mode", True):
+            print(f"The Mobile Apps endpoint in {domain} could not be reached.")
+        return False
+
     try:
-        response = http_get(json_url, headers)
         response.raise_for_status()
         data = response.json()
     except Exception as e:
-        print(f"Error fetching mobile apps JSON: {e}")
+        if hasattr(response, 'status_code') and response.status_code == 403:
+            print(f"Access denied (403) on {domain}. The server blocked the REST request.")
+        else:
+            print(f"Error processing JSON from mobile apps: {e}")
         return False
 
     if not isinstance(data, list):
-        print("Unexpected JSON format: expected a list.")
+        if CONFIG.get("debug_mode", True):
+            print("Unexpected JSON format: a list was expected.")
         return False
 
     report["mobile_apps"] = data
     save_json(report_file, report)
     
     if CONFIG.get("debug_mode", True):
-        print(f"Checking and saving the existence of a mobile aaplication: {data}")
+        print(f"Mobile apps saved successfully: {len(data)} found.")
+        
     return True
 
 def get_platform_info(accesskey: str) -> bool:
-
     _, report_file = get_report_paths(accesskey)
     report = load_json(report_file)
 
@@ -810,12 +886,18 @@ def get_platform_info(accesskey: str) -> bool:
         "Content-Type": "application/soap+xml; charset=utf-8"
     })
 
+    response = http_post(soap_url, data=soap_body, headers=headers)
+
+    if response is None:
+        if CONFIG.get("debug_mode", True):
+            print(f"Connection error in {domain}: The host could not be resolved or is offline.")
+        return False
+
     try:
-        response = http_post(soap_url, data=soap_body, json=None, headers=headers)
         response.raise_for_status()
         xml_content = response.text
     except Exception as e:
-        print(f"Error calling SOAP endpoint: {e}")
+        print(f"SOAP protocol error in {domain}: {e}")
         return False
 
     try:
@@ -828,7 +910,8 @@ def get_platform_info(accesskey: str) -> bool:
 
         response_node = root.find(".//os:GetPlatformInfoResponse", ns)
         if response_node is None:
-            print("Could not find GetPlatformInfoResponse in SOAP response.")
+            if CONFIG.get("debug_mode", True):
+                print("The GetPlatformInfoResponse structure was not found in the XML.")
             return False
 
         platform_info = {}
@@ -837,18 +920,18 @@ def get_platform_info(accesskey: str) -> bool:
             platform_info[tag_name] = child.text
 
     except Exception as e:
-        print(f"Error parsing SOAP XML: {e}")
+        print(f"Error processing XML of {domain}: {e}")
         return False
 
     report["platform_info"] = platform_info
     save_json(report_file, report)
 
     if CONFIG.get("debug_mode", True):
-        print(f"Checking and saving platform information: {platform_info}")
+        print(f"Platform information successfully saved for {domain}.")
+    
     return True
 
 def get_platform_capabilities(accesskey: str) -> bool:
-
     _, report_file = get_report_paths(accesskey)
     report = load_json(report_file)
 
@@ -881,8 +964,14 @@ def get_platform_capabilities(accesskey: str) -> bool:
         "Content-Type": "application/soap+xml; charset=utf-8"
     })
 
+    response = http_post(soap_url, data=soap_body, json=None, headers=headers)
+
+    if response is None:
+        if CONFIG.get("debug_mode", True):
+            print(f"Error: Could not reach the SOAP endpoint at {soap_url} (Connection/DNS failure).")
+        return False
+
     try:
-        response = http_post(soap_url, data=soap_body, json=None, headers=headers)
         response.raise_for_status()
         xml_content = response.text
     except Exception as e:
@@ -925,7 +1014,6 @@ def get_platform_capabilities(accesskey: str) -> bool:
     return True
 
 def get_installation_info(accesskey: str) -> bool:
-
     _, report_file = get_report_paths(accesskey)
     report = load_json(report_file)
 
@@ -958,12 +1046,18 @@ def get_installation_info(accesskey: str) -> bool:
         "Content-Type": "application/soap+xml; charset=utf-8"
     })
 
+    response = http_post(soap_url, data=soap_body, headers=headers)
+
+    if response is None:
+        if CONFIG.get("debug_mode", True):
+            print(f"We were unable to reach the host {domain} to obtain InstallationInfo.")
+        return False
+
     try:
-        response = http_post(soap_url, data=soap_body, json=None, headers=headers)
         response.raise_for_status()
         xml_content = response.text
     except Exception as e:
-        print(f"Error calling GetInstallationKind SOAP endpoint: {e}")
+        print(f"Connection/permission error at the Get Installation Kind endpoint: {e}")
         return False
 
     try:
@@ -974,9 +1068,11 @@ def get_installation_info(accesskey: str) -> bool:
             "os": "http://www.outsystems.com"
         }
 
+        # Busca pelo nó de resposta específico
         response_node = root.find(".//os:GetInstallationKindResponse", ns)
         if response_node is None:
-            print("Could not find GetInstallationKindResponse in SOAP response.")
+            if CONFIG.get("debug_mode", True):
+                print(f"Node GetInstallationKindResponse not found in XML of {domain}.")
             return False
 
         installation_info = {}
@@ -985,18 +1081,19 @@ def get_installation_info(accesskey: str) -> bool:
             installation_info[tag_name] = child.text
 
     except Exception as e:
-        print(f"Error parsing GetInstallationKind SOAP XML: {e}")
+        print(f"Error processing InstallationKind XML: {e}")
         return False
 
+    # 5. Atualização do relatório
     report["installation_info"] = installation_info
     save_json(report_file, report)
 
     if CONFIG.get("debug_mode", True):
-        print(f"Checking and saving installation informations: {installation_info}")
+        print(f"[+] Informações de instalação salvas para {domain}: {installation_info}")
+        
     return True
 
 def get_handshake_properties(accesskey: str) -> bool:
-
     _, report_file = get_report_paths(accesskey)
     report = load_json(report_file)
 
@@ -1029,12 +1126,18 @@ def get_handshake_properties(accesskey: str) -> bool:
         "Content-Type": "application/soap+xml; charset=utf-8"
     })
 
+    response = http_post(soap_url, data=soap_body, headers=headers)
+
+    if response is None:
+        if CONFIG.get("debug_mode", True):
+            print(f"Failed to reach GetPropertiesForHandshake in {domain}")
+        return False
+
     try:
-        response = http_post(soap_url, data=soap_body, json=None, headers=headers)
         response.raise_for_status()
         xml_content = response.text
     except Exception as e:
-        print(f"Error calling GetPropertiesForHandshake SOAP endpoint: {e}")
+        print(f"[-] Erro de protocolo SOAP no handshake: {e}")
         return False
 
     try:
@@ -1047,7 +1150,8 @@ def get_handshake_properties(accesskey: str) -> bool:
 
         response_node = root.find(".//os:GetPropertiesForHandshakeResponse", ns)
         if response_node is None:
-            print("Could not find GetPropertiesForHandshakeResponse in SOAP response.")
+            if CONFIG.get("debug_mode", True):
+                print(f"GetPropertiesForHandshakeResponse not found in XML of {domain}.")
             return False
 
         properties_nodes = response_node.findall(".//os:Properties", ns)
@@ -1067,18 +1171,18 @@ def get_handshake_properties(accesskey: str) -> bool:
                 })
 
     except Exception as e:
-        print(f"Error parsing GetPropertiesForHandshake SOAP XML: {e}")
+        print(f"Error processing Handshake XML: {e}")
         return False
 
     report["handshake_properties"] = handshake_properties
     save_json(report_file, report)
 
     if CONFIG.get("debug_mode", True):
-        print(f"Checking and saving handshake properties: {handshake_properties}")
+        print(f"Handshake properties saved for {domain}: {len(handshake_properties)} items found.")
+        
     return True
 
 def get_external_authentication_status(accesskey: str) -> bool:
-
     _, report_file = get_report_paths(accesskey)
     report = load_json(report_file)
 
@@ -1111,12 +1215,18 @@ def get_external_authentication_status(accesskey: str) -> bool:
         "Content-Type": "application/soap+xml; charset=utf-8"
     })
 
+    response = http_post(soap_url, data=soap_body, headers=headers)
+
+    if response is None:
+        if CONFIG.get("debug_mode", True):
+            print(f"The authentication endpoint could not be reached. {domain}.")
+        return False
+
     try:
-        response = http_post(soap_url, data=soap_body, json=None, headers=headers)
         response.raise_for_status()
         xml_content = response.text
     except Exception as e:
-        print(f"Error calling ExternalAuthentication_IsActive SOAP endpoint: {e}")
+        print(f"Error calling ExternalAuthentication_IsActive: {e}")
         return False
 
     try:
@@ -1129,7 +1239,8 @@ def get_external_authentication_status(accesskey: str) -> bool:
 
         response_node = root.find(".//os:ExternalAuthentication_IsActiveResponse", ns)
         if response_node is None:
-            print("Could not find ExternalAuthentication_IsActiveResponse in SOAP response.")
+            if CONFIG.get("debug_mode", True):
+                print(f"Node ExternalAuthentication_IsActiveResponse not found in {domain}.")
             return False
 
         auth_key_node = response_node.find("os:AuthenticationProviderKey", ns)
@@ -1140,14 +1251,15 @@ def get_external_authentication_status(accesskey: str) -> bool:
         }
 
     except Exception as e:
-        print(f"Error parsing ExternalAuthentication_IsActive SOAP XML: {e}")
+        print(f"Error processing External Authentication XML: {e}")
         return False
 
     report["external_authentication"] = external_auth_info
     save_json(report_file, report)
 
     if CONFIG.get("debug_mode", True):
-        print(f"Checking and saving external authentication status: {external_auth_info}")
+        print(f"External authentication status saved: {external_auth_info}")
+        
     return True
 
 def download_screen_js_files(accesskey: str) -> bool:
@@ -1451,6 +1563,15 @@ def extract_screen_variables(accesskey: str) -> bool:
     return True
 
 def capture_all_screens_xhr(accesskey: str) -> bool:
+    def toggle_www(target_url):
+        parsed = urlparse(target_url)
+        netloc = parsed.netloc
+        if netloc.startswith("www."):
+            new_netloc = netloc.replace("www.", "", 1)
+        else:
+            new_netloc = f"www.{netloc}"
+        return urlunparse(parsed._replace(netloc=new_netloc))
+
     _, report_file = get_report_paths(accesskey)
     report = load_json(report_file)
 
@@ -1461,9 +1582,10 @@ def capture_all_screens_xhr(accesskey: str) -> bool:
     target = report.get("target", {})
     subdomain = target.get("subdomain", "")
     domain = target.get("domain", "")
+    modulename = target.get("modulename", "")
 
-    if not domain:
-        print("Missing 'domain' in report.target.")
+    if not domain or not modulename:
+        print("Missing 'domain' or 'modulename' in report.")
         return False
 
     subdomain_part = f"{subdomain}." if subdomain else ""
@@ -1475,6 +1597,12 @@ def capture_all_screens_xhr(accesskey: str) -> bool:
 
     appscreens_requests = []
 
+    USER_AGENTS = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+    ]
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
 
@@ -1483,90 +1611,89 @@ def capture_all_screens_xhr(accesskey: str) -> bool:
             if not path:
                 continue
 
-            full_url = base_url + path
-            if CONFIG.get("debug_mode", True):
-                print(f"Capturing XHR from the screen: {full_url}")
-
-            USER_AGENTS = [
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0 Safari/537.36",
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
-                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
-            ]
-
-            context = browser.new_context(
-                user_agent=random.choice(USER_AGENTS),
-                locale=random.choice(["pt-PT", "en-US", "es-ES"]),
-                timezone_id=random.choice(["Europe/Lisbon", "UTC", "Europe/Madrid"]),
-                viewport={
-                    "width": random.randint(1200, 1920),
-                    "height": random.randint(700, 1080)
-                }
-            )
-
-            page = context.new_page()
+            full_url_original = base_url + path
+            urls_to_try = [full_url_original, toggle_www(full_url_original)]
+            
             xhr_requests = []
+            success_capture = False
 
-            def on_request(req):
-                if req.resource_type == "xhr":
-                    url_lower = req.url.lower()
-                    if "moduleversioninfo" in url_lower or "moduleinfo" in url_lower:
-                        return
-                    xhr_requests.append({
-                        "url": req.url,
-                        "method": req.method,
-                        "post_data": req.post_data,
-                        "response": None
-                    })
-
-            def on_response(res):
-                if res.request.resource_type == "xhr":
-                    url_lower = res.url.lower()
-                    if "moduleversioninfo" in url_lower or "moduleinfo" in url_lower:
-                        return
-                    for item in xhr_requests:
-                        if item["url"] == res.url:
-                            try:
-                                body = res.text()
-                            except:
-                                body = None
-                            item["response"] = {
-                                "status": res.status,
-                                "body": body
-                            }
-                            break
-
-            page.on("request", on_request)
-            page.on("response", on_response)
-
-            try:
-                page.goto(full_url)
-                page.wait_for_load_state("networkidle")
-            except Exception as e:
-                print(f"Erro ao carregar {full_url}: {e}")
-                appscreens_requests.append({"path": path, "requests": []})
-                page.close()
-                context.close()
-                continue
-
-            final_url = page.url
-            if final_url != full_url:
+            for current_url in urls_to_try:
                 if CONFIG.get("debug_mode", True):
-                    print(f"Redirection to: {full_url} → {final_url} (ignoring)")
-                page.close()
-                context.close()
-                continue
+                    print(f"Navigating to: {current_url}")
 
-            page.close()
-            context.close()
+                context = browser.new_context(
+                    user_agent=random.choice(USER_AGENTS),
+                    locale=random.choice(["pt-PT", "en-US", "es-ES"]),
+                    timezone_id=random.choice(["Europe/Lisbon", "UTC", "Europe/Madrid"]),
+                    viewport={
+                        "width": random.randint(1200, 1920),
+                        "height": random.randint(700, 1080)
+                    }
+                )
 
-            if xhr_requests:
-                appscreens_requests.append({
-                    "path": path,
-                    "requests": xhr_requests
-                })
+                page = context.new_page()
+                xhr_requests.clear()
+
+                def on_request(req):
+                    if req.resource_type == "xhr":
+                        url_lower = req.url.lower()
+                        if "moduleversioninfo" in url_lower or "moduleinfo" in url_lower:
+                            return
+                        xhr_requests.append({
+                            "url": req.url,
+                            "method": req.method,
+                            "post_data": req.post_data,
+                            "response": None
+                        })
+
+                def on_response(res):
+                    if res.request.resource_type == "xhr":
+                        url_lower = res.url.lower()
+                        if "moduleversioninfo" in url_lower or "moduleinfo" in url_lower:
+                            return
+                        for item in xhr_requests:
+                            if item["url"] == res.url:
+                                try:
+                                    body = res.text()
+                                except:
+                                    body = None
+                                item["response"] = {"status": res.status, "body": body}
+                                break
+
+                page.on("request", on_request)
+                page.on("response", on_response)
+
+                try:
+                    # Correção: wait_until='load' para evitar timeout no networkidle
+                    page.goto(current_url, wait_until="load", timeout=30000)
+                    
+                    if page.url != current_url and page.url != current_url + "/":
+                        if CONFIG.get("debug_mode", True):
+                            print(f"Redirect noticed: {page.url}")
+
+                    success_capture = True
+                    time.sleep(2) 
+                    page.close()
+                    context.close()
+                    break
+
+                except Exception as e:
+                    error_msg = str(e)
+                    page.close()
+                    context.close()
+
+                    if "Timeout" in error_msg or "ERR_NAME_NOT_RESOLVED" in error_msg:
+                        if CONFIG.get("debug_mode", True):
+                            print(f"Retry trigger for {current_url}: {error_msg}")
+                        continue
+                    else:
+                        print(f"Fatal error on {current_url}: {error_msg}")
+                        break
+
+            if success_capture and xhr_requests:
+                appscreens_requests.append({"path": path, "requests": list(xhr_requests)})
             else:
-                if CONFIG.get("debug_mode", True):
-                    print(f"[-] No relevant XHR requests in {path} (next)")
+                appscreens_requests.append({"path": path, "requests": []})
 
             time.sleep(random.uniform(0.5, 2.0))
 
@@ -1574,7 +1701,6 @@ def capture_all_screens_xhr(accesskey: str) -> bool:
 
     report["appscreensRequests"] = appscreens_requests
     save_json(report_file, report)
-
     return True
 
 def get_roles(accesskey: str) -> bool:
@@ -1654,7 +1780,6 @@ def get_roles(accesskey: str) -> bool:
     return True
 
 def get_cloudconnet_version(accesskey: str) -> bool:
-    # Load report
     _, report_file = get_report_paths(accesskey)
     report = load_json(report_file)
 
@@ -1662,7 +1787,6 @@ def get_cloudconnet_version(accesskey: str) -> bool:
         print(f"Report not found: {report_file}")
         return False
 
-    # Extract required fields
     subdomain = report["target"].get("subdomain", "")
     domain = report["target"].get("domain", "")
 
@@ -1670,14 +1794,11 @@ def get_cloudconnet_version(accesskey: str) -> bool:
         print("Missing 'domain' in report.")
         return False
 
-    # Build environment URL
     subdomain_part = f"{subdomain}." if subdomain else ""
     environment = f"https://{subdomain_part}{domain}"
 
-    # SOAP endpoint
     soap_url = f"{environment}/CloudConnectAgent/CloudConnect.asmx"
 
-    # SOAP envelope
     soap_body = """<?xml version="1.0" encoding="utf-8"?>
         <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                          xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -1691,15 +1812,20 @@ def get_cloudconnet_version(accesskey: str) -> bool:
         "Content-Type": "application/soap+xml; charset=utf-8"
     })
 
+    response = http_post(soap_url, data=soap_body, headers=headers)
+
+    if response is None:
+        if CONFIG.get("debug_mode", True):
+            print(f"CloudConnect is inaccessible on {domain} (Connection/DNS failure).")
+        return False
+
     try:
-        response = http_post(soap_url, data=soap_body, json=None, headers=headers)
         response.raise_for_status()
         xml_content = response.text
     except Exception as e:
-        print(f"Error calling SOAP endpoint: {e}")
+        print(f"Error calling SOAP CloudConnect: {e}")
         return False
 
-    # Parse XML response
     try:
         root = ET.fromstring(xml_content)
 
@@ -1708,31 +1834,22 @@ def get_cloudconnet_version(accesskey: str) -> bool:
             "os": "http://www.outsystems.com"
         }
 
-        # Correct node for GetVersion
         response_node = root.find(".//os:GetVersionResponse", ns)
         if response_node is None:
-            print("Could not find GetVersionResponse in SOAP response.")
+            print("GetVersionResponse not found in XML.")
             return False
 
         version_node = response_node.find("os:Version", ns)
-        if version_node is None:
-            print("Could not find Version node inside GetVersionResponse.")
-            return False
-
-        version_value = version_node.text
+        version_value = version_node.text if version_node is not None else "Unknown"
 
     except Exception as e:
-        print(f"Error parsing SOAP XML: {e}")
+        print(f"Error processing CloudConnect XML: {e}")
         return False
 
-    # Save into report
     report["target"]["cloudconnect_version"] = version_value
     save_json(report_file, report)
 
     if CONFIG.get("debug_mode", True):
-        print(f"Checking and saving Cloud Connect version: {version_value}")
+        print(f"Cloud Connect version saved: {version_value}")
+    
     return True
-
-if __name__ == '__main__':
-    success = get_app_definitions("e539202b-0dbf-4731-ae58-783c9438ef5f")
-    print(f"{success}")
