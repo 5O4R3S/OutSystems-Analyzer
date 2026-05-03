@@ -8,9 +8,8 @@ from datetime import datetime
 import socket
 from structure import get_struct_report_file
 import xml.etree.ElementTree as ET
-from playwright.sync_api import sync_playwright, TimeoutError
+from playwright.sync_api import sync_playwright
 import random
-import time
 from urllib.parse import urlparse, urlunparse
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -1580,122 +1579,98 @@ def capture_all_screens_xhr(accesskey: str) -> bool:
         return False
 
     target = report.get("target", {})
-    subdomain = target.get("subdomain", "")
     domain = target.get("domain", "")
-    modulename = target.get("modulename", "")
-
-    if not domain or not modulename:
-        print("Missing 'domain' or 'modulename' in report.")
+    subdomain = target.get("subdomain", "")
+    
+    if not domain:
+        print("Missing 'domain' in report.")
         return False
 
     subdomain_part = f"{subdomain}." if subdomain else ""
     base_url = f"https://{subdomain_part}{domain}".rstrip("/")
 
-    if "appscreens" not in report or not isinstance(report["appscreens"], list):
-        print("No screenshots found in appscreens.")
-        return False
-
     appscreens_requests = []
 
     USER_AGENTS = [
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0 Safari/537.36",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
     ]
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
 
-        for screen in report["appscreens"]:
+        for screen in report.get("appscreens", []):
             path = screen.get("path", "")
-            if not path:
-                continue
+            if not path: continue
 
             full_url_original = base_url + path
             urls_to_try = [full_url_original, toggle_www(full_url_original)]
             
-            xhr_requests = []
+            xhr_results = []
             success_capture = False
 
             for current_url in urls_to_try:
-                if CONFIG.get("debug_mode", True):
-                    print(f"Navigating to: {current_url}")
-
-                context = browser.new_context(
-                    user_agent=random.choice(USER_AGENTS),
-                    locale=random.choice(["pt-PT", "en-US", "es-ES"]),
-                    timezone_id=random.choice(["Europe/Lisbon", "UTC", "Europe/Madrid"]),
-                    viewport={
-                        "width": random.randint(1200, 1920),
-                        "height": random.randint(700, 1080)
-                    }
-                )
-
+                
+                context = browser.new_context(user_agent=random.choice(USER_AGENTS))
                 page = context.new_page()
-                xhr_requests.clear()
 
-                def on_request(req):
-                    if req.resource_type == "xhr":
-                        url_lower = req.url.lower()
-                        if "moduleversioninfo" in url_lower or "moduleinfo" in url_lower:
-                            return
-                        xhr_requests.append({
-                            "url": req.url,
-                            "method": req.method,
-                            "post_data": req.post_data,
-                            "response": None
-                        })
+                def handle_request(request):
+                    if request.resource_type == "xhr":
+                        url = request.url.lower()
+                        if not any(ignore in url for ignore in ["moduleversioninfo", "moduleinfo"]):
+                            xhr_results.append({
+                                "url": request.url,
+                                "method": request.method,
+                                "post_data": request.post_data,
+                                "response": None
+                            })
 
-                def on_response(res):
-                    if res.request.resource_type == "xhr":
-                        url_lower = res.url.lower()
-                        if "moduleversioninfo" in url_lower or "moduleinfo" in url_lower:
-                            return
-                        for item in xhr_requests:
-                            if item["url"] == res.url:
+                def handle_response(response):
+                    if response.request.resource_type == "xhr":
+                        for entry in xhr_results:
+                            if entry["url"] == response.url and entry["response"] is None:
                                 try:
-                                    body = res.text()
-                                except:
-                                    body = None
-                                item["response"] = {"status": res.status, "body": body}
+                                    entry["response"] = {
+                                        "status": response.status,
+                                        "body": response.text()
+                                    }
+                                except Exception:
+                                    entry["response"] = {"status": response.status, "body": "[Sem corpo]"}
                                 break
 
-                page.on("request", on_request)
-                page.on("response", on_response)
+                page.on("request", handle_request)
+                page.on("response", handle_response)
 
                 try:
-                    # Correção: wait_until='load' para evitar timeout no networkidle
+                    if CONFIG.get("debug_mode", True):
+                        print(f"[*] Tentando: {current_url}")
+
                     page.goto(current_url, wait_until="load", timeout=30000)
                     
-                    if page.url != current_url and page.url != current_url + "/":
-                        if CONFIG.get("debug_mode", True):
-                            print(f"Redirect noticed: {page.url}")
+                    page.wait_for_timeout(5000) 
 
-                    success_capture = True
-                    time.sleep(2) 
+                    if len(xhr_results) > 0:
+                        success_capture = True
+                        if CONFIG.get("debug_mode", True):
+                            print(f"Captured {len(xhr_results)} XHR requests.")
+                    
                     page.close()
                     context.close()
-                    break
+                    
+                    if success_capture:
+                        break 
 
                 except Exception as e:
-                    error_msg = str(e)
+                    if CONFIG.get("debug_mode", True):
+                        print(f"Error: {current_url}: {str(e)}")
                     page.close()
                     context.close()
+                    continue
 
-                    if "Timeout" in error_msg or "ERR_NAME_NOT_RESOLVED" in error_msg:
-                        if CONFIG.get("debug_mode", True):
-                            print(f"Retry trigger for {current_url}: {error_msg}")
-                        continue
-                    else:
-                        print(f"Fatal error on {current_url}: {error_msg}")
-                        break
-
-            if success_capture and xhr_requests:
-                appscreens_requests.append({"path": path, "requests": list(xhr_requests)})
-            else:
-                appscreens_requests.append({"path": path, "requests": []})
-
-            time.sleep(random.uniform(0.5, 2.0))
+            appscreens_requests.append({
+                "path": path,
+                "requests": list(xhr_results)
+            })
 
         browser.close()
 
@@ -1853,3 +1828,4 @@ def get_cloudconnet_version(accesskey: str) -> bool:
         print(f"Cloud Connect version saved: {version_value}")
     
     return True
+

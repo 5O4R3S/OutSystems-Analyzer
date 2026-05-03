@@ -37,6 +37,8 @@ def get_struct_report_file() -> dict:
         "external_authentication":{},
         "endpoints":[],
         "screens_detail":[],
-        "appscreensRequests":[]
+        "appscreensRequests":[],
+        "roles":[],
+        "interaction_xhr_analysis":[]
     }
     return empty_structure
