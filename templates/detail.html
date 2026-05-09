@@ -229,22 +229,30 @@
                                                     data-bs-toggle="collapse" data-bs-target="#screen-{{ loop.index }}"
                                                     style="cursor: pointer;">
 
-                                                    <!-- Lado esquerdo: nome da tela -->
-                                                    <div>
+                                                    <!-- Lado esquerdo: nome da tela + link externo -->
+                                                    <div class="d-flex align-items-center">
                                                         <i class="bi bi-window-fullscreen me-2"></i>
 
                                                         {% if screen.suspicious %}
-                                                        <span class="text-warning ">
+                                                        <span class="text-warning me-2">
                                                             {{ screen.path.lstrip('/') }}
                                                         </span>
                                                         {% else %}
-                                                        {{ screen.path.lstrip('/') }}
+                                                        <span class="me-2">{{ screen.path.lstrip('/') }}</span>
                                                         {% endif %}
+
+                                                        <!-- Ícone de URL para abrir em nova aba -->
+                                                        <a href="https://{{ report.target.subdomain }}.{{ report.target.domain }}/{{ report.target.modulename }}{{ screen.path }}"
+                                                            target="_blank"
+                                                            class="text-primary d-inline-flex align-items-center"
+                                                            onclick="event.stopPropagation();" data-bs-toggle="tooltip"
+                                                            data-bs-title="Open url">
+                                                            <i class="bi bi-box-arrow-up-right"></i>
+                                                        </a>
                                                     </div>
 
                                                     <!-- Lado direito: ícone de warning + seta -->
                                                     <div class="d-flex align-items-center gap-2">
-
                                                         {% if screen.suspicious %}
                                                         <i class="bi bi-exclamation-triangle-fill text-warning"
                                                             data-bs-toggle="tooltip"
@@ -253,7 +261,6 @@
 
                                                         <i class="bi bi-chevron-down"></i>
                                                     </div>
-
                                                 </div>
 
 
@@ -289,8 +296,11 @@
                                                             <span>
                                                                 {{ var.name }}
                                                                 {% if var.default_value %}
-                                                                <span class="text-muted">[defaultValue: {{
-                                                                    var.default_value }}]</span>
+                                                                <span class="text-muted">[defaultValue:
+                                                                    {{var.default_value }}]</span>
+                                                                {% endif %}
+                                                                {% if var.is_input %}
+                                                                <span class="text-muted">[Type: {{var.type }}]</span>
                                                                 {% endif %}
                                                             </span>
 
@@ -518,6 +528,14 @@
 
                                                             <div class="small text-break mt-1">
                                                                 <span class="text-muted">URL:</span> {{ r.url }}
+                                                                {% if r.url and r.url != "" and r.response.status == 200 and r.response.body != "" %}
+                                                                <a href="#" class="ms-2 text-danger ai-logic-trigger"
+                                                                    data-problem="My REST API request is '{{ r.post_data | urlencode }}' and the response is '{{ r.response.body | urlencode }}'. Is there any risk?"
+                                                                    data-bs-toggle="modal" data-bs-target="#aiAdviceModal"
+                                                                    style="text-decoration: none;">
+                                                                    <i class="bi bi-stars" title="Ask the AI"></i>
+                                                                </a>
+                                                                {% endif %}
                                                             </div>
 
                                                             <!-- Status -->
@@ -687,7 +705,17 @@
                                     <td>{{ var.name }}</td>
                                     <td>{{ var.module }}</td>
                                     <td><span class="badge bg-secondary">{{ var.type }}</span></td>
-                                    <td>{{ var.default_value }}</td>
+                                    <td>{{ var.default_value }}
+                                        {% if var.default_value and var.default_value != "" and var.default_value !=
+                                        "''" and var.default_value != '""' %}
+                                        <a href="#" class="ms-2 text-danger ai-logic-trigger"
+                                            data-problem="The Client Variable '{{ var.name }}' in the module '{{ var.module }}' has the default value: '{{ var.default_value }}. Is there any risk?'."
+                                            data-bs-toggle="modal" data-bs-target="#aiAdviceModal"
+                                            style="text-decoration: none;">
+                                            <i class="bi bi-stars" title="Ask the AI"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

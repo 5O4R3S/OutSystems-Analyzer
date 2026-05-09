@@ -16,7 +16,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 REPORT_DIR = "reports"
 SUSPICIOUS_WORDS = ["test","123","2","teste","dev","old","anonymous","screen1","screen2"]
-SUSPICIOUS_EXTENSIONS = {".xlsx",".xls",".doc",".docx",".aspx",".xml",".pdf",".exe",".txt",".zip",".ppt",".pts",".7z",".rar",".oml",".oap",".backup",".bkp","backup","bkp",".sql",".abk",".tmp",".bak",".tm",".csv",".ical",".ics",".bin"}
+SUSPICIOUS_EXTENSIONS = {".xlsx",".xls",".doc",".docx",".aspx",".xml",".pdf",".exe",".txt",".zip",".ppt",".pts",".7z",".rar",".oml",".oap",".backup",".bkp","backup","bkp",".sql",".abk",".tmp",".bak",".tm",".csv",".ical",".ics",".bin",".yaml",".json"}
 CONFIG = {}
 
 def load_config():
@@ -1509,16 +1509,8 @@ def extract_screen_variables(accesskey: str) -> bool:
             type_arg = args[5]
             default_arg = args[6]
 
-            type_match = re.search(r'OS\.DataTypes\.DataTypes\.([A-Za-z0-9]+)', type_arg)
-            if type_match:
-                var_type = type_match.group(1)
-            else:
-                var_type = "Unknown"
-
-            if var_type.lower() == "boolean":
-                type_out = "boolean"
-            else:
-                type_out = var_type
+            type_match = re.search(r'OS\.(?:Types|DataTypes\.DataTypes)\.(\w+)', type_arg)
+            type_out = type_match.group(1) if type_match else "Unknown"
 
             default_match = re.search(r'return\s*([\s\S]*?)\s*;', default_arg)
             if default_match:
@@ -1829,3 +1821,7 @@ def get_cloudconnet_version(accesskey: str) -> bool:
     
     return True
 
+
+
+if __name__ == '__main__':
+    extract_screen_variables("b0cd9a38-b762-4756-871a-4c05c796c610")
