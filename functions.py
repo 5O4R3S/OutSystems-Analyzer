@@ -10,6 +10,7 @@ from structure import get_struct_report_file
 import xml.etree.ElementTree as ET
 from playwright.sync_api import sync_playwright
 import random
+from handleurl import toggle_www
 from urllib.parse import urlparse, urlunparse
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -231,15 +232,6 @@ def http_get(url, headers=None):
     attempts = CONFIG.get("max_attempts", 3)
     timeout = CONFIG.get("request_timeout", 60)
     
-    def toggle_www(target_url):
-        parsed = urlparse(target_url)
-        netloc = parsed.netloc
-        if netloc.startswith("www."):
-            new_netloc = netloc.replace("www.", "", 1)
-        else:
-            new_netloc = f"www.{netloc}"
-        return urlunparse(parsed._replace(netloc=new_netloc))
-
     urls_to_try = [url, toggle_www(url)]
     
     for current_url in urls_to_try:
@@ -284,15 +276,6 @@ def http_post(url, data=None, json=None, headers=None):
     attempts = CONFIG.get("max_attempts", 3)
     timeout = CONFIG.get("request_timeout", 60)
     
-    def toggle_www(target_url):
-        parsed = urlparse(target_url)
-        netloc = parsed.netloc
-        if netloc.startswith("www."):
-            new_netloc = netloc.replace("www.", "", 1)
-        else:
-            new_netloc = f"www.{netloc}"
-        return urlunparse(parsed._replace(netloc=new_netloc))
-
     urls_to_try = [url, toggle_www(url)]
     
     for current_url in urls_to_try:
@@ -673,7 +656,6 @@ def get_react_version(accesskey: str) -> bool:
     return True
 
 def get_references_health(accesskey: str) -> bool:
-
     report_data, report_file = get_report_paths(accesskey)
     report_map = load_json(report_data)
     report = load_json(report_file)
@@ -690,46 +672,82 @@ def get_references_health(accesskey: str) -> bool:
         print("Missing 'domain' or 'modulename' in report.")
         return False
 
-    subdomain_part = f"{subdomain}." if subdomain else ""
-    environment = f"https://{subdomain_part}{domain}"
+    # --- Lógica do www (Mantida como você gosta) ---
+    domains_to_try = [domain]
+    if domain.startswith("www."):
+        domains_to_try.append(domain.replace("www.", "", 1))
+    else:
+        domains_to_try.append(f"www.{domain}")
 
+    subdomain_part = f"{subdomain}." if subdomain else ""
+    
+    # --- Busca original do path ---
     search_pattern = f"{modulename}.referencesHealth"
     url_versions = report_map.get("manifest", {}).get("urlVersions", {})
     client_health = next(
-        (path for path in url_versions.keys()
-        if search_pattern in path),
+        (path for path in url_versions.keys() if search_pattern in path),
         None
     )
 
-    js_url = f"{environment}{client_health}"
-
-    headers = build_headers({
-        "Accept": "*/*",
-        "Sec-Fetch-Dest": "script"
-    })
-
-    try:
-        response = http_get(js_url, headers)
-        response.raise_for_status()
-        js_content = response.text
-    except Exception as e:
-        print(f"Error downloading referencesHealth JS: {e}")
+    if not client_health:
+        print(f"ReferencesHealth JS path not found for {modulename}")
         return False
 
-    matches = re.findall(r"'([^']+)'", js_content)
+    # --- Tenta baixar o JS usando os domínios ---
+    js_content = None
+    for current_domain in domains_to_try:
+        environment = f"https://{subdomain_part}{current_domain}"
+        js_url = f"{environment}{client_health}"
+        
+        try:
+            headers = build_headers({"Accept": "*/*", "Sec-Fetch-Dest": "script"})
+            response = http_get(js_url, headers)
+            if response and response.status_code == 200:
+                js_content = response.text
+                break
+        except: continue
 
+    if not js_content:
+        return False
+
+    # --- Extração das referências ---
+    matches = re.findall(r"'([^']+)'", js_content)
     references = []
     for name in matches:
-        pattern = fr"referencesHealth\$.*{re.escape(name)}"
+        pattern = fr"referencesHealth\$.*?{re.escape(name)}"
         if re.search(pattern, js_content):
             references.append(name)
-
+    
     references = list(dict.fromkeys(references))
 
-    report["references_health"] = references
+    # --- NOVA VERIFICAÇÃO: ModuleServices/ModuleInfo ---
+    references_with_scan = []
+    for ref in references:
+        allow_to_scan = False
+        
+        for current_domain in domains_to_try:
+            url_moduleinfo = f"https://{subdomain_part}{current_domain}/{ref}/moduleservices/moduleinfo"
+            try:
+                headers_json = build_headers({"Content-Type": "application/json"})
+                res = http_get(url_moduleinfo, headers_json)
+                if res and res.status_code == 200:
+                    allow_to_scan = True
+                    break
+            except: continue
+            
+        references_with_scan.append({
+            "modulename": ref,
+            "allowtoscan": allow_to_scan,
+            "analysis_id":""
+        })
+
+    # Salva o novo formato
+    report["references_health"] = references_with_scan
     save_json(report_file, report)
+    
     if CONFIG.get("debug_mode", True):
-        print(f"Checking the health of the references: {references}")
+        print(f"Checking the health of the references: {references_with_scan}")
+    
     return True
 
 def get_client_variables(accesskey: str) -> bool:
@@ -1554,15 +1572,6 @@ def extract_screen_variables(accesskey: str) -> bool:
     return True
 
 def capture_all_screens_xhr(accesskey: str) -> bool:
-    def toggle_www(target_url):
-        parsed = urlparse(target_url)
-        netloc = parsed.netloc
-        if netloc.startswith("www."):
-            new_netloc = netloc.replace("www.", "", 1)
-        else:
-            new_netloc = f"www.{netloc}"
-        return urlunparse(parsed._replace(netloc=new_netloc))
-
     _, report_file = get_report_paths(accesskey)
     report = load_json(report_file)
 
@@ -1590,6 +1599,11 @@ def capture_all_screens_xhr(accesskey: str) -> bool:
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
+        context = browser.new_context(user_agent=random.choice(USER_AGENTS))
+        page = context.new_page()
+        
+        # Otimização: Bloquear recursos pesados para acelerar o scan
+        page.route("**/*.{png,jpg,jpeg,gif,svg,css,woff,woff2,ttf}", lambda route: route.abort())
 
         for screen in report.get("appscreens", []):
             path = screen.get("path", "")
@@ -1602,9 +1616,6 @@ def capture_all_screens_xhr(accesskey: str) -> bool:
             success_capture = False
 
             for current_url in urls_to_try:
-                
-                context = browser.new_context(user_agent=random.choice(USER_AGENTS))
-                page = context.new_page()
 
                 def handle_request(request):
                     if request.resource_type == "xhr":
@@ -1640,14 +1651,11 @@ def capture_all_screens_xhr(accesskey: str) -> bool:
                     page.goto(current_url, wait_until="load", timeout=30000)
                     
                     page.wait_for_timeout(5000) 
+                    page.on("request", lambda _: None) # Limpa listeners
+                    page.on("response", lambda _: None)
 
                     if len(xhr_results) > 0:
                         success_capture = True
-                        if CONFIG.get("debug_mode", True):
-                            print(f"Captured {len(xhr_results)} XHR requests.")
-                    
-                    page.close()
-                    context.close()
                     
                     if success_capture:
                         break 
@@ -1655,8 +1663,6 @@ def capture_all_screens_xhr(accesskey: str) -> bool:
                 except Exception as e:
                     if CONFIG.get("debug_mode", True):
                         print(f"Error: {current_url}: {str(e)}")
-                    page.close()
-                    context.close()
                     continue
 
             appscreens_requests.append({
@@ -1824,4 +1830,4 @@ def get_cloudconnet_version(accesskey: str) -> bool:
 
 
 if __name__ == '__main__':
-    extract_screen_variables("b0cd9a38-b762-4756-871a-4c05c796c610")
+    get_references_health("cdc1780d-f118-4327-9bb6-ed0b2021bf7f")

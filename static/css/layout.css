@@ -1,0 +1,420 @@
+:root {
+    --hacker-green: #00ff41;
+    --hacker-dark: #050505;
+    --terminal-bg: #0d0d0d;
+    --border-glow: rgba(0, 255, 65, 0.2);
+    --font-mono: 'Fira Code', 'Courier New', monospace;
+}
+
+body {
+    background-color: var(--hacker-dark);
+    color: #e0e0e0;
+    font-family: var(--font-mono);
+    background-image: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #050505 100%);
+    min-height: 100vh;
+}
+
+/* Estilo do Terminal de Busca */
+.terminal-card {
+    background-color: var(--terminal-bg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
+    padding: 0;
+    margin-bottom: 3rem;
+    overflow: hidden;
+}
+
+.terminal-window-header {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.terminal-controls {
+    display: flex;
+    gap: 8px;
+    min-width: 60px; /* Garante espaço para os botões */
+}
+
+.control-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.control-dot.red { background: #ff5f56; cursor: pointer; }
+.control-dot.yellow { background: #ffbd2e; }
+.control-dot.green { background: #27c93f; }
+
+.terminal-input-group {
+    background: #000;
+    border: 1px solid #333;
+    padding: 5px 15px;
+    display: flex;
+    align-items: center;
+    border-radius: 2px;
+}
+
+.terminal-input-group:focus-within {
+    border-color: var(--hacker-green);
+    box-shadow: 0 0 8px var(--border-glow);
+}
+
+.terminal-input-group span {
+    color: var(--hacker-green);
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.form-control-hacker {
+    background: rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--hacker-green) !important;
+    font-family: var(--font-mono);
+    box-shadow: none !important;
+    padding: 0.75rem 1rem; /* Aumenta um pouco o padding para um visual mais robusto */
+    transition: all 0.3s ease;
+}
+
+.form-control-hacker:focus {
+    background: rgba(0, 255, 65, 0.02) !important;
+    border-color: var(--hacker-green) !important;
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.1) !important;
+    outline: none;
+}
+
+/* Mantém o input da Home (dentro do grupo) sem bordas extras */
+.terminal-input-group .form-control-hacker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.form-control-hacker::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important; /* Cinza claro semi-transparente */
+}
+
+.btn-hacker {
+    background-color: transparent;
+    color: var(--hacker-green);
+    border: 1px solid var(--hacker-green);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.btn-hacker:hover {
+    background-color: var(--hacker-green); /* Fundo verde */
+    color: #000;
+    box-shadow: 0 0 20px var(--hacker-green);
+}
+
+.btn-hacker-main {
+    background-color: var(--hacker-green);
+    color: var(--hacker-dark); /* Texto escuro no fundo verde */
+    border: 1px solid var(--hacker-green);
+    text-transform: uppercase;
+    letter-spacing: 3px; /* Mais espaçamento para destaque */
+    font-weight: bold;
+    transition: all 0.3s;
+    box-shadow: 0 0 15px var(--hacker-green); /* Brilho inicial mais forte */
+}
+
+.btn-hacker-main:hover {
+    box-shadow: 0 0 30px var(--hacker-green), 0 0 50px rgba(0, 255, 65, 0.5); /* Brilho ainda mais intenso no hover */
+}
+
+.btn-hacker-danger {
+    background-color: rgba(255, 49, 49, 0.05);
+    color: #ff3131;
+    border: 1px solid #ff3131;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+    transition: all 0.3s;
+    box-shadow: 0 0 5px rgba(255, 49, 49, 0.2);
+}
+
+.btn-hacker-danger:hover {
+    background-color: #ff3131;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(255, 49, 49, 0.6);
+}
+
+/* Aviso Legal Estilizado */
+.legal-notice {
+    background: rgba(10, 10, 10, 0.8);
+    border-left: 3px solid #ffc107;
+    border-top: 1px solid #333;
+    border-right: 1px solid #333;
+    border-bottom: 1px solid #333;
+    padding: 20px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+.legal-header {
+    color: #ffc107;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+
+/* Badges de Configuração */
+.badge-status {
+    background: #111;
+    border: 1px solid #444;
+    color: #888;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    padding: 5px 10px;
+}
+
+.badge-active {
+    color: var(--hacker-green);
+    border-color: var(--hacker-green);
+}
+
+/* Hover para os badges de ação na tabela */
+a.badge-status {
+    transition: all 0.2s ease-in-out;
+}
+
+a.badge-status.badge-active:hover {
+    background-color: rgba(0, 255, 65, 0.1);
+    box-shadow: 0 0 10px var(--hacker-green);
+}
+
+a.badge-status.text-warning.border-warning:hover {
+    background-color: rgba(255, 193, 7, 0.08);
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.6);
+}
+
+/* Cursor Animado */
+.cursor-blink {
+    display: inline-block;
+    width: 8px;
+    height: 18px;
+    background: var(--hacker-green);
+    animation: blink 1s infinite;
+    vertical-align: middle;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Ajuste de legibilidade para textos secundários */
+.text-muted {
+    --bs-text-opacity: 1;
+    color: var(--bs-gray-500) !important;
+}
+
+/* Botão de fechar nativo do Bootstrap ajustado */
+.btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Ajuste de legibilidade para textos secundários */
+.text-muted {
+    --bs-text-opacity: 1;
+    color: var(--bs-gray-500) !important;
+}
+
+.modal-content {
+    background-color: var(--terminal-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9);
+    border-radius: 12px;
+    overflow: hidden;
+    color: #e0e0e0;
+}
+
+.modal-footer {
+    background-color: rgba(255, 255, 255, 0.01);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1.25rem;
+}
+
+.btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Layout de Log de Auditoria (Grid) */
+.history-header {
+    display: flex;
+    width: 100%;
+    padding: 12px 15px;
+    background: rgba(0, 255, 65, 0.05);
+    border: 1px solid rgba(0, 255, 65, 0.2);
+    border-bottom: 2px solid var(--hacker-green);
+    color: var(--hacker-green);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+}
+
+.history-entry {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    padding: 10px 15px;
+    border: 1px solid #1a1a1a;
+    background: rgba(255, 255, 255, 0.01);
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 3px solid transparent;
+}
+
+.history-entry:hover {
+    background: rgba(0, 255, 65, 0.08);
+    border-color: rgba(0, 255, 65, 0.3);
+    border-left: 3px solid var(--hacker-green);
+}
+
+.resource-icon-wrapper i {
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.history-entry:hover .resource-icon-wrapper i {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 8px currentColor);
+}
+
+.border-warning {
+    border-color: rgba(255, 193, 7, 0.5) !important;
+    box-shadow: inset 0 0 15px rgba(255, 193, 7, 0.05) !important;
+}
+
+/* Sidebar Estilizada */
+.sidebar-hacker {
+    background-color: #050505 !important;
+    border-right: 1px solid rgba(0, 255, 65, 0.1);
+    box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+}
+
+.sidebar-link {
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 15px !important;
+    border-left: 3px solid transparent;
+    transition: all 0.3s;
+}
+
+.sidebar-link:hover, .sidebar-link.active {
+    background: rgba(0, 255, 65, 0.05);
+    color: var(--hacker-green) !important;
+    border-left: 3px solid var(--hacker-green);
+}
+
+/* Tabelas de Auditoria */
+.table-hacker {
+    --bs-table-bg: transparent;
+    --bs-table-color: #e0e0e0;
+    --bs-table-border-color: rgba(255, 255, 255, 0.05);
+    font-size: 0.85rem;
+}
+
+.table-hacker thead th {
+    background: rgba(0, 255, 65, 0.05);
+    color: var(--hacker-green);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    border-bottom: 2px solid var(--hacker-green) !important;
+}
+
+/* Seções do Relatório */
+.report-section-header {
+    color: var(--hacker-green);
+    border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.data-label {
+    color: var(--bs-gray-500);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+.col-time { width: 110px; color: var(--bs-gray-500); font-size: 0.75rem; }
+.col-target { flex-grow: 1; padding-left: 15px; border-left: 1px solid #222; }
+.col-actions { width: 80px; text-align: right; }
+
+.history-link {
+    color: #e0e0e0 !important;
+    text-decoration: none !important;
+}
+
+.history-link:hover .app-name {
+    color: var(--hacker-green);
+}
+
+.app-name {
+    color: #fff;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+/* Screen Inspector - Tree View Aesthetic */
+.inspector-row {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.inspector-row:hover {
+    background: rgba(0, 255, 65, 0.03);
+    border-color: rgba(0, 255, 65, 0.2);
+}
+
+.var-entry {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-left: 2px solid #333;
+    margin-left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.var-entry:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-left-color: var(--hacker-green);
+}
+
+.request-packet {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.request-packet:hover {
+    border-color: rgba(0, 255, 65, 0.2);
+    background: rgba(0, 255, 65, 0.02);
+}
+
+.xhr-pre-block {
+    min-height: 250px !important;
+    max-height: 250px !important;
+    height: 250px;
+    overflow-y: auto;
+    border-width: 1px;
+    border-style: solid;
+    font-family: var(--font-mono);
+}

@@ -6,101 +6,112 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OutSystems Analyzer - Configurations</title>
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/layout.css') }}" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="../static/img/logo.png">
 </head>
 
-<body data-bs-theme="dark">
+<body>
     <div class="container">
-        <h2 class="mt-5">Configurations</h2>
+        <h2 class="report-section-header mt-5">> SYSTEM_CONFIGURATIONS</h2>
+        
         <form action="/config" method="POST">
 
-        <section class="mt-5">
-            <div class="alert alert-success" role="alert">
-                <h4 class="alert-heading">Requests</h4>
-                <p>Configure how requests are made and how they behave.</p>
-                <hr>
+        <section class="mt-4">
+            <div class="terminal-card">
+                <div class="terminal-window-header">
+                    <div class="terminal-controls">
+                        <span class="control-dot red"></span>
+                        <span class="control-dot yellow"></span>
+                        <span class="control-dot green"></span>
+                    </div>
+                    <div class="mx-auto small text-muted opacity-50">PROTOCOL_SETTINGS</div>
+                </div>
+                <div class="p-4">
+                    <p class="data-label mb-3">Network Request Protocols</p>
                     <div class="form-check form-switch">
-                        <input name="use_random_headers" class="form-check-input" type="checkbox" role="switch"
+                        <input name="use_random_headers" class="form-check-input border-secondary" type="checkbox" role="switch"
                             id="switchrandomheaders" {% if config.use_random_headers %}checked{% endif %}>
-                        <label class="form-check-label" for="switchrandomheaders">Using random headers in the request.</label>
+                        <label class="form-check-label text-muted small" for="switchrandomheaders">ENABLE_RANDOM_HEADERS (Anti-Bot Bypass)</label>
                     </div>
                     
-                    <div class="row mb-3">
-                        <label for="inputRequestTimeout" class="col-sm-10 col-form-label">Timeout (seconds)</label>
+                    <div class="row mb-3 mt-3">
+                        <label for="inputRequestTimeout" class="col-sm-10 col-form-label small text-muted">REQUEST_TIMEOUT_INTERVAL (Seconds)</label>
                         <div class="col-sm-2">
-                        <input name="request_timeout" type="number" class="form-control" id="inputRequestTimeout" value="{{ config.request_timeout }}">
+                        <input name="request_timeout" type="number" class="form-control form-control-hacker text-center" id="inputRequestTimeout" value="{{ config.request_timeout }}">
                         </div>
                     </div>
 
                     <div class="row mb-3">
-                        <label for="inputMaxAttempts" class="col-sm-10 col-form-label">Maximum number of request attempts</label>
+                        <label for="inputMaxAttempts" class="col-sm-10 col-form-label small text-muted">MAX_RETRY_THRESHOLD</label>
                         <div class="col-sm-2">
-                        <input name="max_attempts" type="number" class="form-control" id="inputMaxAttempts" value="{{ config.max_attempts }}">
+                        <input name="max_attempts" type="number" class="form-control form-control-hacker text-center" id="inputMaxAttempts" value="{{ config.max_attempts }}">
                         </div>
                     </div>
-
+                </div>
             </div>
         </section>
 
         <section class="mt-2">
-            <div class="alert alert-success" role="alert">
-                <h4 class="alert-heading">Performance</h4>
-                <p>Adjust how the tool should be run.</p>
-                <hr>
-                
+            <div class="terminal-card">
+                <div class="terminal-window-header">
+                    <div class="terminal-controls">
+                        <span class="control-dot red"></span>
+                        <span class="control-dot yellow"></span>
+                        <span class="control-dot green"></span>
+                    </div>
+                    <div class="mx-auto small text-muted opacity-50">ENGINE_PERFORMANCE</div>
+                </div>
+                <div class="p-4">
                     <div class="form-check form-switch">
-                        <input name="quick_mode" class="form-check-input" type="checkbox" role="switch"
+                        <input name="quick_mode" class="form-check-input border-secondary" type="checkbox" role="switch"
                             id="switchQuickMode" {% if config.quick_mode %}checked{% endif %}>
-                        <label class="form-check-label" for="switchQuickMode">Quick mode: performs only quick functions.</label>
+                        <label class="form-check-label text-muted small" for="switchQuickMode">QUICK_SCAN_MODE (Skip Intensive Modules)</label>
                     </div>
-                    <div class="form-check form-switch">
-                        <input name="debug_mode" class="form-check-input" type="checkbox" role="switch"
+                    <div class="form-check form-switch mt-2">
+                        <input name="debug_mode" class="form-check-input border-secondary" type="checkbox" role="switch"
                             id="switchdebugMode" {% if config.debug_mode %}checked{% endif %}>
-                        <label class="form-check-label" for="switchdebugMode">Debug mode: Debug mode displays logs of what is running in real time in the terminal.</label>
+                        <label class="form-check-label text-muted small" for="switchdebugMode">VERBOSE_DEBUG_LOGS (Real-time Console Output)</label>
                     </div>
-                
+                </div>
             </div>
         </section>
 
         <section class="mt-2">
-            <div class="alert alert-success" role="alert">
-                <h4 class="alert-heading">Artificial Intelligence (AI)</h4>
-                <p>Use artificial intelligence to help you understand the detected technical debts.</p>
-                <hr>
-                    <div class="row mb-3">
-                        <label for="inputGeminiKey" class="col-sm-4 col-form-label">Gemini API Key</label>
+            <div class="terminal-card">
+                <div class="terminal-window-header">
+                    <div class="terminal-controls">
+                        <span class="control-dot red"></span>
+                        <span class="control-dot yellow"></span>
+                        <span class="control-dot green"></span>
+                    </div>
+                    <div class="mx-auto small text-muted opacity-50">INTELLIGENCE_MODULE</div>
+                </div>
+                <div class="p-4">
+                    <div class="row mb-4">
+                        <label for="inputGeminiKey" class="col-sm-4 col-form-label small text-muted">GEMINI_INTELLIGENCE_TOKEN</label>
                         <div class="col-sm-8">
-                        <input name="gemini_api_key" type="text" class="form-control" id="inputGeminiKey" value="{{ gemini_api_key }}">
+                        <input name="gemini_api_key" type="password" class="form-control form-control-hacker" id="inputGeminiKey" value="{{ gemini_api_key }}" placeholder="Paste your API key here...">
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label for="inputGeminiKey" class="col-sm-4 col-form-label">Clear AI suggestion cache.</label>
+                        <label class="col-sm-4 col-form-label small text-muted">VOLATILE_MEMORY_PURGE</label>
                         <div class="col-sm-8">
-                        <button id="btn-clear-ai-cache" class="btn btn-warning">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
-                            <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5"/>
-                            </svg> Clear Cache
+                        <button type="button" id="btn-clear-ai-cache" class="btn btn-hacker-danger btn-sm">
+                            <i class="bi bi-trash3 me-2"></i>PURGE_AI_CACHE
                         </button>
                         </div>
                     </div>
-
+                </div>
             </div>
         </section>
 
-
-        <div class="d-flex justify-content-end">
-            <a class="btn btn-outline-light d-inline-flex align-items-center me-4" href="/">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download me-2" viewBox="0 0 16 16">
-                  <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m3.5 7.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5z"/>
-                </svg>
-                Back
+        <div class="d-flex justify-content-end gap-3 mt-4 mb-5">
+            <a class="btn btn-hacker d-inline-flex align-items-center px-4" href="/">
+                <i class="bi bi-arrow-left me-2"></i> RETURN_TO_BASE
             </a>
-            <button type="submit" class="btn btn-danger d-inline-flex align-items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download me-2" viewBox="0 0 16 16">
-                    <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0H3v5.5A1.5 1.5 0 0 0 4.5 7h7A1.5 1.5 0 0 0 13 5.5V0h.086a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5H14v-5.5A1.5 1.5 0 0 0 12.5 9h-9A1.5 1.5 0 0 0 2 10.5V16h-.5A1.5 1.5 0 0 1 0 14.5z"/>
-                <path d="M3 16h10v-5.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5zm9-16H4v5.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5zM9 1h2v4H9z"/>
-                </svg>
-                Save Settings
+            <button type="submit" class="btn btn-hacker-main d-inline-flex align-items-center px-4">
+                <i class="bi bi-shield-check me-2"></i> APPLY_CHANGES
             </button>
         </div>
         </form>

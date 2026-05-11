@@ -7,18 +7,18 @@
     <title>OutSystems Analyzer - Report Detail</title>
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/layout.css') }}" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/logo.png') }}">
 </head>
 
-<body data-bs-theme="dark">
+<body>
     <main id="main-content" class="" data-bs-spy="scroll" data-bs-target="#sidebar-menu" data-bs-offset="80"
         tabindex="0">
 
         <div class="d-flex">
 
             <!-- SIDEBAR -->
-            <nav id="sidebar-menu" class="sidebar bg-dark text-white p-3 position-fixed h-100 d-flex flex-column"
+            <nav id="sidebar-menu" class="sidebar sidebar-hacker text-white p-3 position-fixed h-100 d-flex flex-column"
                 style="width: 260px;">
 
                 <div class="sidebar-header text-center mb-4 mt-4">
@@ -29,116 +29,112 @@
 
                 <ul class="nav flex-column gap-1 mt-5">
                     <li class="nav-item">
-                        <a href="#details" class="nav-link text-white d-flex align-items-center sidebar-link">
+                        <a href="#details" class="nav-link text-muted d-flex align-items-center sidebar-link">
                             <i class="bi bi-bullseye me-2"></i> Details
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="#handshake" class="nav-link text-white d-flex align-items-center sidebar-link">
+                        <a href="#handshake" class="nav-link text-muted d-flex align-items-center sidebar-link">
                             <i class="bi bi-arrow-down-up me-2"></i> Handshakes
                         </a>
                     </li>
 
                     <li class="nav-item" title="Screens, Requests, Resources and Dependencies">
-                        <a href="#buttonsdetails" class="nav-link text-white d-flex align-items-center sidebar-link">
+                        <a href="#buttonsdetails" class="nav-link text-muted d-flex align-items-center sidebar-link">
                             <i class="bi bi-4-circle me-2"></i> SRRD
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="#mobileapps" class="nav-link text-white d-flex align-items-center sidebar-link">
+                        <a href="#mobileapps" class="nav-link text-muted d-flex align-items-center sidebar-link">
                             <i class="bi bi-folder2-open me-2"></i> Mobile Apps
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="#clientvariables" class="nav-link text-white d-flex align-items-center sidebar-link">
+                        <a href="#clientvariables" class="nav-link text-muted d-flex align-items-center sidebar-link">
                             <i class="bi bi-braces-asterisk me-2"></i> Client Variables
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="#platformcapabilities"
-                            class="nav-link text-white d-flex align-items-center sidebar-link">
+                        <a href="#platformcapabilities" class="nav-link text-muted d-flex align-items-center sidebar-link">
                             <i class="bi bi-gear me-2"></i> Platform Capabilities
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="#referenceshealth" class="nav-link text-white d-flex align-items-center sidebar-link">
-                            <i class="bi bi-file-earmark-medical me-2"></i> Platform Capabilities
+                        <a href="#referenceshealth" class="nav-link text-muted d-flex align-items-center sidebar-link">
+                            <i class="bi bi-file-earmark-medical me-2"></i> References Health
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a href="#roleskey" class="nav-link text-white d-flex align-items-center sidebar-link">
+                        <a href="#roleskey" class="nav-link text-muted d-flex align-items-center sidebar-link">
                             <i class="bi bi-key me-2"></i> Roles & Keys
                         </a>
                     </li>
                 </ul>
 
-                <a href="{{ url_for('homePage') }}" class="btn btn-danger d-inline-flex align-items-center mt-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                        class="bi bi-download me-2" viewBox="0 0 16 16">
-                        <path
-                            d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m3.5 7.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5z" />
-                    </svg>
-                    Back to home
+                <a href="{{ url_for('homePage') }}" class="btn btn-hacker-danger mt-auto">
+                    <i class="bi bi-arrow-left me-2"></i> EXIT_VAULT
                 </a>
             </nav>
 
 
             <!-- CONTEÚDO -->
-            <main class="content flex-grow-1 p-4" style="margin-left: 260px;">
+            <main class="content flex-grow-1 p-5" style="margin-left: 260px;">
 
                 <section id="details" class="mb-5">
-                    <h3>Report Detail</h3>
-                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                    <h3 class="report-section-header">> REPORT_DETAILS</h3>
+                    <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2 mb-4">
                         <div>
-                            <span class="text-muted small">Identification</span>
+                            <span class="data-label">Identification_Hash</span>
                             <p class="fw-bold mb-0">{{ report.metadata.analysis_id }}</p>
                         </div>
 
                         <div class="text-end">
-                            <span class="fst-italic small d-block">{{ report.metadata.started_at | datetimeformat
-                                }}</span>
-                            <span class="badge bg-success text-uppercase">{{ report.metadata.status }}</span>
+                            <span class="data-label d-block">Execution_Timestamp</span>
+                            <span class="text-white small me-3">{{ report.metadata.started_at | datetimeformat }}</span>
+                            <span class="badge badge-status badge-active text-uppercase">{{ report.metadata.status }}</span>
                         </div>
                     </div>
 
-                    <div class="alert alert-success" role="alert">
+                    <div class="terminal-card p-4">
                         <div class="row">
                             <div class="col">
                                 <p>
-                                    <span class="fw-bold small">Full URL</span></br>
+                                    <span class="data-label">Full URL</span></br>
                                     <span class="fst-italic">{{ report.target.full_url }}</span>
                                 </p>
                                 <p>
-                                    <span class="fw-bold small">DNS (Enterprise Only)</span></br>
+                                    <span class="data-label">DNS (Enterprise Only)</span></br>
                                     <span class="fst-italic">{{ report.target.real_dns }}</span>
                                 </p>
                                 <p>
-                                    <span class="fw-bold small">Module</span></br>
+                                    <span class="data-label">Module_Identity</span></br>
                                     <span class="fst-italic">{{ report.target.homeModuleName }}</br>{{
                                         report.target.homeModuleKey }}</span>
-                                </p>
-                                <p>
-                                    <span class="fw-bold small">Application</span></br>
-                                    <span class="fst-italic">{{ report.target.applicationName }}</br>{{
-                                        report.target.applicationKey }}</span>
                                 </p>
                             </div>
                             <div class="col">
                                 <p>
-                                    <span class="fw-bold small">Platform</span></br>
+                                    <span class="data-label">Application_Container</span></br>
+                                    <span class="fst-italic">{{ report.target.applicationName }}</br>{{
+                                        report.target.applicationKey }}</span>
+                                </p>
+                                <p>
+                                    <span class="data-label">Platform_Core</span></br>
                                     <span class="fst-italic">{{ report.platform_info.Version | default('N/A', True)}}
                                         <span class="badge text-bg-primary">version</span></br>{{
                                         report.platform_info.Serial | default('N/A', True)}} <span
                                             class="badge text-bg-warning">serial</span></span>
                                 </p>
+                            </div>
+                            <div class="col">
                                 <p>
-                                    <span class="fw-bold small">Installation</span></br>
+                                    <span class="data-label">Installation_Infrastructure</span></br>
                                     <span class="fst-italic">{{ report.installation_info.InstallationKind |
                                         default('N/A', True)}}</br>{{
                                         report.installation_info.DatabaseKind | default('N/A', True)}} <span
@@ -147,58 +143,49 @@
                                             class="badge text-bg-primary">server</span></span>
                                 </p>
                                 <p>
-                                    <span class="fw-bold small">Environment</span></br>
+                                    <span class="data-label">Environment_Node</span></br>
                                     <span class="fst-italic">{{ report.target.environmentName | default('N/A',
                                         True)}}</br>{{
                                         report.target.environmentKey | default('N/A', True)}}</span>
                                 </p>
-                            </div>
-                            <div class="col">
                                 <p>
-                                    <span class="fw-bold small">Tenant</span></br>
+                                    <span class="data-label">Tenant_Context</span></br>
                                     <span class="fst-italic">{{ report.target.userTenantProvider | default('N/A',
-                                        True)}}</span>
-                                </p>
-                                <p>
-                                    <span class="fw-bold small">React Version</span></br>
-                                    <span class="fst-italic">{{ report.target.react_version | default('N/A',
-                                        True)}}</span>
-                                </p>
-                                <p>
-                                    <span class="fw-bold small">Cloud Connect Version</span></br>
-                                    <span class="fst-italic">{{ report.target.cloudconnect_version | default('N/A',
                                         True)}}</span>
                                 </p>
                             </div>
                         </div>
+                    </div>
                 </section>
 
                 <section id="handshake" class="mb-5">
-                    <h4>Handshake</h4>
+                    <h4 class="report-section-header">> HANDSHAKE_PROPERTIES</h4>
                     <ul class="list-group">
                         {% for item in report.handshake_properties %}
-                        <li class="list-group-item list-group-item-success"><span class="fw-bold small">{{ item.name
-                                }}</span></br>{{ item.value }}</li>
+                        <li class="list-group-item bg-transparent border-secondary text-white">
+                            <span class="data-label">{{ item.name }}</span></br>
+                            <span class="text-info">{{ item.value }}</span>
+                        </li>
                         {% endfor %}
                     </ul>
                 </section>
 
                 <section id="buttonsdetails" class="mb-5">
-                    <h4>XHR</h4>
+                    <h4 class="report-section-header">> XHR_MODULES</h4>
                     <div class="text-center">
                         <div class="row row-cols-4">
-                            <div class="col"><button type="button" class="btn btn-warning btn-lg w-100"
+                            <div class="col"><button type="button" class="btn btn-hacker w-100 py-3"
                                     data-bs-toggle="modal" data-bs-target="#screensdetails"><i
-                                        class="bi bi-window-fullscreen fs-1"></i></br> Screens & Details</button></div>
-                            <div class="col"><button type="button" class="btn btn-warning btn-lg w-100"
+                                        class="bi bi-window-fullscreen fs-3"></i></br> SCREENS</button></div>
+                            <div class="col"><button type="button" class="btn btn-hacker w-100 py-3"
                                     data-bs-toggle="modal" data-bs-target="#requestanalysis"><i
-                                        class="bi bi-arrow-left-right fs-1"></i></br> Request Analysis</button></div>
-                            <div class="col"><button type="button" class="btn btn-warning btn-lg w-100"
+                                        class="bi bi-arrow-left-right fs-3"></i></br> REQUESTS</button></div>
+                            <div class="col"><button type="button" class="btn btn-hacker w-100 py-3"
                                     data-bs-toggle="modal" data-bs-target="#resourcesdetail"><i
-                                        class="bi bi-folder2-open fs-1"></i></br> Resources</button></div>
-                            <div class="col"><button type="button" class="btn btn-warning btn-lg w-100"
+                                        class="bi bi-folder2-open fs-3"></i></br> RESOURCES</button></div>
+                            <div class="col"><button type="button" class="btn btn-hacker w-100 py-3"
                                     data-bs-toggle="modal" data-bs-target="#dependenciesdetails"><i
-                                        class="bi bi-arrow-repeat fs-1"></i></br> Dependencies</button></div>
+                                        class="bi bi-arrow-repeat fs-3"></i></br> DEPS</button></div>
                         </div>
                     </div>
 
@@ -207,13 +194,18 @@
                         tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
                             <div class="modal-content">
-                                <div class="modal-header">
-                                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Screens Details & Parameters,
-                                        Variables...</h1>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
+                                <div class="terminal-window-header">
+                                    <div class="terminal-controls">
+                                        <span class="control-dot red" data-bs-dismiss="modal" style="cursor: pointer;"></span>
+                                        <span class="control-dot yellow"></span>
+                                        <span class="control-dot green"></span>
+                                    </div>
+                                    <div class="mx-auto small text-muted opacity-50">SCREEN_VARIABLE_INSPECTOR</div>
+                                                                        <div style="min-width: 60px; text-align: right;">
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
                                 </div>
-                                <div class="modal-body">
+                                <div class="modal-body p-4">
 
 
 
@@ -222,32 +214,31 @@
                                         {% for screen in report.screens_detail %}
                                         <div class="col-12 mb-3">
 
-                                            <div class="card">
+                                            <div class="inspector-row overflow-hidden">
 
                                                 <!-- HEADER CLICÁVEL -->
-                                                <div class="card-header d-flex justify-content-between align-items-center"
+                                                <div class="p-3 d-flex justify-content-between align-items-center"
                                                     data-bs-toggle="collapse" data-bs-target="#screen-{{ loop.index }}"
                                                     style="cursor: pointer;">
 
                                                     <!-- Lado esquerdo: nome da tela + link externo -->
                                                     <div class="d-flex align-items-center">
-                                                        <i class="bi bi-window-fullscreen me-2"></i>
-
-                                                        {% if screen.suspicious %}
-                                                        <span class="text-warning me-2">
-                                                            {{ screen.path.lstrip('/') }}
-                                                        </span>
-                                                        {% else %}
-                                                        <span class="me-2">{{ screen.path.lstrip('/') }}</span>
-                                                        {% endif %}
+                                                        <i class="bi bi-terminal text-muted me-3"></i>
+                                                        
+                                                        <div>
+                                                            <span class="data-label d-block" style="font-size: 0.6rem;">EXECUTION_PATH</span>
+                                                            <span class="fw-bold {{ 'text-warning' if screen.suspicious else 'text-white' }}" style="letter-spacing: 0.5px;">
+                                                                /{{ screen.path.lstrip('/') }}
+                                                            </span>
+                                                        </div>
 
                                                         <!-- Ícone de URL para abrir em nova aba -->
                                                         <a href="https://{{ report.target.subdomain }}.{{ report.target.domain }}/{{ report.target.modulename }}{{ screen.path }}"
                                                             target="_blank"
-                                                            class="text-primary d-inline-flex align-items-center"
+                                                            class="text-muted ms-3 hover-white"
                                                             onclick="event.stopPropagation();" data-bs-toggle="tooltip"
-                                                            data-bs-title="Open url">
-                                                            <i class="bi bi-box-arrow-up-right"></i>
+                                                            data-bs-title="Bypass to Live Target">
+                                                            <i class="bi bi-box-arrow-up-right small"></i>
                                                         </a>
                                                     </div>
 
@@ -256,62 +247,48 @@
                                                         {% if screen.suspicious %}
                                                         <i class="bi bi-exclamation-triangle-fill text-warning"
                                                             data-bs-toggle="tooltip"
-                                                            data-bs-title="Esta tela é suspeita"></i>
+                                                            data-bs-title="SUSPICIOUS_PATH_DETECTED"></i>
                                                         {% endif %}
 
-                                                        <i class="bi bi-chevron-down"></i>
+                                                        <i class="bi bi-code-square text-muted"></i>
                                                     </div>
                                                 </div>
 
 
                                                 <!-- CONTEÚDO COLAPSÁVEL -->
                                                 <div id="screen-{{ loop.index }}" class="collapse">
-
-                                                    <ul class="list-group list-group-flush">
+                                                    <div class="pb-3 px-3">
+                                                        <div class="data-label mb-2 ms-4">LOCAL_MEMORY_DUMP</div>
 
                                                         {% for var in screen.variables %}
-                                                        <li class="list-group-item d-flex align-items-center gap-2">
+                                                        <div class="var-entry">
 
                                                             {% if var.is_input %}
-                                                            <i class="bi bi-arrow-right-circle-fill text-danger-emphasis"
-                                                                data-bs-toggle="tooltip" data-bs-title="Input"></i>
+                                                            <i class="bi bi-chevron-right text-danger" title="INPUT_PARAMETER"></i>
                                                             {% endif %}
 
                                                             {% if var.is_local %}
-                                                            <i class="bi bi-circle-fill" data-bs-toggle="tooltip"
-                                                                data-bs-title="Local"></i>
+                                                            <i class="bi bi-dot text-info" title="LOCAL_VARIABLE"></i>
                                                             {% endif %}
 
                                                             {% if var.is_aggregate %}
-                                                            <i class="bi bi-database-fill" data-bs-toggle="tooltip"
-                                                                data-bs-title="Aggregate"></i>
+                                                            <i class="bi bi-database text-success" title="DATA_AGGREGATE"></i>
                                                             {% endif %}
 
-                                                            {% if not var.is_input and not var.is_local and not
-                                                            var.is_aggregate %}
-                                                            <i class="bi bi-question-circle-fill"
-                                                                data-bs-toggle="tooltip" data-bs-title="Unknown"></i>
-                                                            {% endif %}
-
-                                                            <span>
-                                                                {{ var.name }}
+                                                            <span class="text-white-50">
+                                                                <span class="text-white">{{ var.name }}</span>
+                                                                <span class="ms-2 opacity-50 small">:: {{var.type }}</span>
+                                                                
                                                                 {% if var.default_value %}
-                                                                <span class="text-muted">[defaultValue:
-                                                                    {{var.default_value }}]</span>
-                                                                {% endif %}
-                                                                {% if var.is_input %}
-                                                                <span class="text-muted">[Type: {{var.type }}]</span>
+                                                                <span class="text-info ms-2">= {{var.default_value }}</span>
                                                                 {% endif %}
                                                             </span>
-
-                                                        </li>
+                                                        </div>
 
                                                         {% else %}
-                                                        <li class="list-group-item text-muted">No variables</li>
+                                                        <div class="text-muted small ms-5 italic">-- EMPTY_STACK --</div>
                                                         {% endfor %}
-
-                                                    </ul>
-
+                                                    </div>
                                                 </div>
 
                                             </div>
@@ -329,75 +306,97 @@
                         tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
                             <div class="modal-content">
-                                <div class="modal-header">
-                                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Resources available</h1>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
+                                <div class="terminal-window-header d-flex align-items-center justify-content-between">
+                                    <div class="terminal-controls">
+                                        <span class="control-dot red" data-bs-dismiss="modal" title="Close"></span>
+                                        <span class="control-dot yellow"></span>
+                                        <span class="control-dot green"></span>
+                                    </div>
+                                    <div class="small text-muted opacity-50 text-uppercase fw-bold" style="letter-spacing: 2px;">FILE_SYSTEM_RESOURCES</div>
+                                    <div style="min-width: 60px; text-align: right;">
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
                                 </div>
-                                <div class="modal-body">
+                                <div class="modal-body p-4">
 
                                     {% macro resource_icon(path) %}
                                     {% set ext = path.split('.')[-1] | lower %}
+                                    {% set icon_color = 'text-white' %}
 
                                     {% if ext == 'html' %}
-                                    <i class="bi bi-filetype-html fs-1"></i>
+                                    {% set icon_color = 'text-info' %}
+                                    <i class="bi bi-filetype-html fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext in ['xlsx', 'xls'] %}
-                                    <i class="bi bi-file-earmark-spreadsheet fs-1"></i>
+                                    {% set icon_color = 'text-success' %}
+                                    <i class="bi bi-file-earmark-spreadsheet fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext in ['doc', 'docx'] %}
-                                    <i class="bi bi-file-earmark-word fs-1"></i>
+                                    {% set icon_color = 'text-primary' %}
+                                    <i class="bi bi-file-earmark-word fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext == 'aspx' %}
-                                    <i class="bi bi-filetype-html fs-1"></i>
+                                    {% set icon_color = 'text-warning' %}
+                                    <i class="bi bi-filetype-html fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext == 'xml' %}
-                                    <i class="bi bi-filetype-xml fs-1"></i>
+                                    {% set icon_color = 'text-warning' %}
+                                    <i class="bi bi-filetype-xml fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext == 'pdf' %}
-                                    <i class="bi bi-file-earmark-pdf fs-1"></i>
+                                    {% set icon_color = 'text-danger' %}
+                                    <i class="bi bi-file-earmark-pdf fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext == 'svg' %}
-                                    <i class="bi bi-filetype-svg fs-1"></i>
+                                    <i class="bi bi-filetype-svg fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext == 'exe' %}
-                                    <i class="bi bi-filetype-svg fs-1"></i>
+                                    {% set icon_color = 'text-danger' %}
+                                    <i class="bi bi-file-binary fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext == 'txt' %}
-                                    <i class="bi bi-filetype-txt fs-1"></i>
+                                    <i class="bi bi-filetype-txt fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext in ['woff', 'woff2', 'ttf'] %}
-                                    <i class="bi bi-fonts fs-1"></i>
+                                    {% set icon_color = 'text-muted' %}
+                                    <i class="bi bi-fonts fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext in ['zip', '7z', 'rar'] %}
-                                    <i class="bi bi-file-zip-fill fs-1"></i>
+                                    {% set icon_color = 'text-warning' %}
+                                    <i class="bi bi-file-zip-fill fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext in ['jpeg', 'jpg', 'gif','png'] %}
-                                    <i class="bi bi bi-image fs-1"></i>
+                                    {% set icon_color = 'text-muted' %}
+                                    <i class="bi bi-image fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext in ['ppt', 'pts'] %}
-                                    <i class="bi bi-file-earmark-ppt fs-1"></i>
+                                    {% set icon_color = 'text-danger' %}
+                                    <i class="bi bi-file-earmark-ppt fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext in ['oml', 'oap'] %}
-                                    <i class="bi bi-file-earmark-code fs-1"></i>
+                                    <i class="bi bi-file-earmark-code fs-1" style="color: var(--hacker-green);"></i>
 
                                     {% elif ext in ['backup', 'bkp', 'bak', 'abk'] %}
-                                    <i class="bi bi-database-fill-down fs-1"></i>
+                                    {% set icon_color = 'text-danger' %}
+                                    <i class="bi bi-database-fill-down fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext in ['tmp', 'tm'] %}
-                                    <i class="bi bi-file-earmark fs-1"></i>
+                                    {% set icon_color = 'text-muted' %}
+                                    <i class="bi bi-file-earmark fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext == 'sql' %}
-                                    <i class="bi bi-database-fill fs-1"></i>
+                                    {% set icon_color = 'text-info' %}
+                                    <i class="bi bi-database-fill fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext == 'csv' %}
-                                    <i class="bi bi-filetype-csv fs-1"></i>
+                                    {% set icon_color = 'text-success' %}
+                                    <i class="bi bi-filetype-csv fs-1 {{ icon_color }}"></i>
 
                                     {% elif ext in ['ical', 'ics'] %}
-                                    <i class="bi bi-calendar-event-fill fs-1"></i>
+                                    <i class="bi bi-calendar-event-fill fs-1 {{ icon_color }}"></i>
 
                                     {% else %}
-                                    <i class="bi bi-file-earmark-minus-fill fs-1"></i>
+                                    <i class="bi bi-file-earmark-minus-fill fs-1 {{ icon_color }}"></i>
                                     {% endif %}
                                     {% endmacro %}
 
@@ -405,38 +404,31 @@
                                     <div class="row g-3">
                                         {% for resource in report.resources %}
                                         <div class="col-6 col-md-4 col-lg-3">
-                                            <!-- Adicionamos 'position-relative' no card para ancorar o robô -->
-                                            <div
-                                                class="card h-100 border-4 shadow-sm position-relative {% if resource.suspicious %}border-warning{% endif %}">
-
-                                                {% if resource.suspicious %}
-                                                <!-- Botão da IA: Posicionado de forma absoluta no canto superior do card -->
-                                                <a href="#"
-                                                    class="position-absolute top-0 end-0 m-1 text-danger ai-logic-trigger"
-                                                    data-problem="My application contains a file with public access via URL that has been flagged as suspicious; the file path is '{{ resource.path }}'. What are the security risks associated with publicly exposing this type of file?"
-                                                    data-bs-toggle="modal" data-bs-target="#aiAdviceModal"
-                                                    style="text-decoration: none; z-index: 10;" title="Ask the AI">
-                                                    <i class="bi bi-stars fs-5"></i>
-                                                </a>
-                                                {% endif %}
-
-                                                <div
-                                                    class="card-body d-flex flex-column align-items-center justify-content-center text-center p-3">
-                                                    <!-- Ícone do arquivo (via função personalizada) -->
-                                                    <div class="mb-2">
-                                                        {{ resource_icon(resource.path) }}
-                                                    </div>
-
-                                                    <!-- Nome do arquivo com quebra de linha inteligente -->
-                                                    <small class="text-muted fw-bold text-break">
-                                                        {{ resource.path.split('/')[-1] }}
-                                                    </small>
+                                            <div class="history-entry h-100 flex-column align-items-start p-3 position-relative {% if resource.suspicious %}border-warning{% endif %}" style="border-left-width: 3px;">
+                                                <div class="d-flex justify-content-between w-100 align-items-start mb-3">
+                                                    <div class="resource-icon-wrapper">
+                                                    {{ resource_icon(resource.path) }}
+                                                </div>
+                                                    {% if resource.suspicious %}
+                                                    <a href="#" class="ai-logic-trigger"
+                                                        data-problem="Public access detected: {{ resource.path }}. Evaluate risk level."
+                                                        data-bs-toggle="modal" data-bs-target="#aiAdviceModal"
+                                                        style="text-decoration: none;">
+                                                        <i class="bi bi-stars text-warning fs-5" title="SECURITY_ADVICE"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="mt-auto w-100">
+                                                    <span class="data-label d-block mb-1">ENTRY_NAME</span>
+                                                    <div class="text-white fw-bold small text-break mb-2">{{ resource.path.split('/')[-1] }}</div>
+                                                    
+                                                    <span class="data-label d-block mb-1">VIRTUAL_PATH</span>
+                                                    <div class="text-muted" style="font-size: 0.65rem; word-break: break-all; font-family: var(--font-mono);">{{ resource.path }}</div>
                                                 </div>
                                             </div>
                                         </div>
                                         {% endfor %}
                                     </div>
-
                                 </div>
                             </div>
                         </div>
@@ -447,29 +439,35 @@
                         tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
                             <div class="modal-content">
-                                <div class="modal-header">
-                                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Dependencies</h1>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
+                                <div class="terminal-window-header d-flex align-items-center justify-content-between">
+                                    <div class="terminal-controls">
+                                        <span class="control-dot red" data-bs-dismiss="modal" title="Close"></span>
+                                        <span class="control-dot yellow"></span>
+                                        <span class="control-dot green"></span>
+                                    </div>
+                                    <div class="small text-muted opacity-50 text-uppercase fw-bold" style="letter-spacing: 2px;">MODULE_DEPENDENCY_GRAPH</div>
+                                    <div style="min-width: 60px; text-align: right;">
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
                                 </div>
-                                <div class="modal-body">
-
+                                <div class="modal-body p-4">
                                     <div class="row g-3">
-                                        {% for dependencie in report.dependencies %}
+                                        {% for dependency in report.dependencies %}
                                         <div class="col-6 col-md-4 col-lg-3">
-                                            <div class="card h-100 border-4">
-                                                <ul class="list-group list-group-flush">
-                                                    <li class="list-group-item d-flex flex-column align-items-center">
-
-                                                        <span class="text-break">/{{ dependencie.modulename }}</span>
-                                                    </li>
-                                                </ul>
+                                            <div class="history-entry h-100 flex-column align-items-start p-3" style="border-left-width: 3px; border-left-color: var(--bs-info);">
+                                                <div class="mb-3">
+                                                    <i class="bi bi-box-seam text-info fs-4"></i>
+                                                </div>
+                                                <div class="w-100">
+                                                    <span class="data-label d-block mb-1">DEPENDENCY_NODE</span>
+                                                    <div class="text-white fw-bold small text-break">
+                                                        /{{ dependency.modulename }}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         {% endfor %}
                                     </div>
-
-
                                 </div>
                             </div>
                         </div>
@@ -480,112 +478,114 @@
                         tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen">
                             <div class="modal-content">
-                                <div class="modal-header">
-                                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Requests made through the
-                                        screens</h1>
-                                    <button type="button" class="btn-close text-danger" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
+                                <div class="terminal-window-header">
+                                    <div class="terminal-controls">
+                                        <span class="control-dot red" data-bs-dismiss="modal" style="cursor: pointer;"></span>
+                                        <span class="control-dot yellow"></span>
+                                        <span class="control-dot green"></span>
+                                    </div>
+                                    <div class="mx-auto small text-muted opacity-50">XHR_TRAFFIC_ANALYZER</div>
+                                                                    <div style="min-width: 60px; text-align: right;">
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
                                 </div>
-                                <div class="modal-body">
+                                <div class="modal-body p-4">
                                     <div class="row">
 
                                         {% for request in report.appscreensRequests %}
+                                        {% set screen_index = loop.index %}
                                         <div class="col-12 mb-3">
-
-                                            <div class="card">
+                                            <div class="inspector-row">
 
                                                 <!-- HEADER CLICÁVEL -->
-                                                <div class="card-header d-flex justify-content-between align-items-center"
-                                                    data-bs-toggle="collapse" data-bs-target="#screen-{{ loop.index }}"
+                                                <div class="p-3 d-flex justify-content-between align-items-center"
+                                                    data-bs-toggle="collapse" data-bs-target="#req-screen-{{ screen_index }}"
                                                     style="cursor: pointer;">
 
                                                     <!-- Lado esquerdo: nome da tela -->
-                                                    <div>
-                                                        <i class="bi bi-window-fullscreen me-2"></i>
-
-                                                        <span class="">
-                                                            {{ request.path }}
-                                                        </span>
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="bi bi-broadcast text-muted me-3"></i>
+                                                        <div>
+                                                            <span class="data-label d-block" style="font-size: 0.6rem;">TRAFFIC_SOURCE</span>
+                                                            <span class="fw-bold text-white">{{ request.path }}</span>
+                                                        </div>
+                                                        <span class="badge badge-status ms-3">{{ request.requests|length }} CALLS</span>
                                                     </div>
-
+                                                    <i class="bi bi-chevron-down text-muted"></i>
                                                 </div>
-
 
                                                 <!-- CONTEÚDO COLAPSÁVEL -->
-                                                <div id="screen-{{ loop.index }}" class="collapse">
-
-                                                    {% if request.requests|length > 0 %}
-                                                    <ul class="list-group list-group-flush">
-
+                                                <div id="req-screen-{{ screen_index }}" class="collapse">
+                                                    <div class="p-3 pt-0">
+                                                        {% if request.requests|length > 0 %}
+                                                        <div class="data-label mb-2 ms-2">XHR_STREAM_DUMP</div>
+                                                        
                                                         {% for r in request.requests %}
-                                                        <li class="list-group-item">
-
-                                                            <!-- Método + URL -->
-                                                            <div class="fw-bold">
-                                                                <i class="bi bi-link-45deg me-1"></i>
-                                                                {{ r.method }}
-                                                            </div>
-
-                                                            <div class="small text-break mt-1">
-                                                                <span class="text-muted">URL:</span> {{ r.url }}
-                                                                {% if r.url and r.url != "" and r.response.status == 200 and r.response.body != "" %}
-                                                                <a href="#" class="ms-2 text-danger ai-logic-trigger"
-                                                                    data-problem="My REST API request is '{{ r.post_data | urlencode }}' and the response is '{{ r.response.body | urlencode }}'. Is there any risk?"
-                                                                    data-bs-toggle="modal" data-bs-target="#aiAdviceModal"
-                                                                    style="text-decoration: none;">
-                                                                    <i class="bi bi-stars" title="Ask the AI"></i>
-                                                                </a>
-                                                                {% endif %}
-                                                            </div>
-
-                                                            <!-- Status -->
-                                                            <div class="small mt-1">
-                                                                <span class="text-muted">Status:</span>
-                                                                {% if r.response.status == 200 %}
-                                                                <span class="text-success">{{ r.response.status
-                                                                    }}</span>
-                                                                {% else %}
-                                                                <span class="text-danger">{{ r.response.status }}</span>
-                                                                {% endif %}
-                                                            </div>
-
-                                                            <div class="row">
-                                                                <div class="col">
-                                                                    <h6 class="fw-bold">POST DATA</h6>
-                                                                    <pre id="postdata-{{ loop.index }}"
-                                                                        class="alert alert-success small p-2 rounded text-break overflow-auto"
-                                                                        style="white-space: pre-wrap; max-height: 300px; min-height: 300px !important;">
-                                                                        {{ r.post_data | safe }}
-                                                                    </pre>
-
+                                                        <div class="request-packet p-3 mb-3">
+                                                            <!-- Packet Header -->
+                                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                                <div class="d-flex gap-2 align-items-center">
+                                                                    <span class="badge {{ 'text-bg-success' if r.method == 'GET' else 'text-bg-primary' }} font-monospace" style="font-size: 0.7rem;">{{ r.method }}</span>
+                                                                    <code class="text-white-50 small text-break">{{ r.url }}</code>
                                                                 </div>
+                                                                
+                                                                <div class="d-flex align-items-center gap-3">
+                                                                    {% if r.response.status == 200 %}
+                                                                    <span class="text-success small fw-bold font-monospace">[ 200_OK ]</span>
+                                                                    {% else %}
+                                                                    <span class="text-danger small fw-bold font-monospace">[ {{ r.response.status }}_ERR ]</span>
+                                                                    {% endif %}
 
-                                                                <div class="col">
-                                                                    <h6 class="fw-bold">RESPONSE</h6>
-                                                                    <pre id="response-{{ loop.index }}"
-                                                                        class="alert alert-success small p-2 rounded text-break overflow-auto"
-                                                                        style="white-space: pre-wrap; max-height: 300px; min-height: 300px !important;">
-                                                                        {{ r.response.body | safe }}
-                                                                    </pre>
+                                                                    {% if r.url and r.url != "" and r.response.status == 200 and r.response.body != "" %}
+                                                                    <a href="#" class="ai-logic-trigger"
+                                                                        data-problem="My REST API request is '{{ r.post_data | urlencode }}' and the response is '{{ r.response.body | urlencode }}'. Is there any risk?"
+                                                                        data-bs-toggle="modal" data-bs-target="#aiAdviceModal"
+                                                                        style="text-decoration: none;">
+                                                                        <i class="bi bi-stars text-warning" title="ANALYZE_STREAM"></i>
+                                                                    </a>
+                                                                    {% endif %}
                                                                 </div>
                                                             </div>
 
+                                                            <!-- Packet Data -->
+                                                            <div class="row g-2">
+                                                                <div class="col-md-6">
+                                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                                        <span class="data-label" style="font-size: 0.6rem;">REQ_PAYLOAD</span>
+                                                                        <button type="button" class="btn btn-link btn-sm p-0 text-muted copy-to-clipboard"
+                                                                            data-target-id="postdata-{{ screen_index }}-{{ loop.index }}" title="Copy to clipboard">
+                                                                            <i class="bi bi-clipboard"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                    <pre id="postdata-{{ screen_index }}-{{ loop.index }}"
+                                                                        class="bg-black text-info xhr-pre-block p-2 rounded small mb-0"
+                                                                        style="border-color: rgba(0, 255, 255, 0.1) !important;">{% if r.post_data %}{{ r.post_data | safe }}{% else %}(EMPTY){% endif %}</pre>
+                                                                </div>
 
-                                                        </li>
+                                                                <div class="col-md-6">
+                                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                                        <span class="data-label" style="font-size: 0.6rem;">RES_BUFFER</span>
+                                                                        <button type="button" class="btn btn-link btn-sm p-0 text-muted copy-to-clipboard"
+                                                                            data-target-id="response-{{ screen_index }}-{{ loop.index }}" title="Copy to clipboard">
+                                                                            <i class="bi bi-clipboard"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                    <pre id="response-{{ screen_index }}-{{ loop.index }}"
+                                                                        class="bg-black text-success xhr-pre-block p-2 rounded small mb-0"
+                                                                        style="border-color: rgba(0, 255, 65, 0.1) !important;">{% if r.response.body %}{{ r.response.body | safe }}{% else %}(EMPTY){% endif %}</pre>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                         {% endfor %}
 
-                                                    </ul>
-
-                                                    {% else %}
-                                                    <div class="p-3 text-muted text-center">
-                                                        Nenhuma request encontrada
+                                                        {% else %}
+                                                        <div class="p-4 text-center">
+                                                            <p class="text-muted small italic">>> NO_XHR_TRAFFIC_CAPTURED</p>
+                                                        </div>
+                                                        {% endif %}
                                                     </div>
-                                                    {% endif %}
-
                                                 </div>
-
                                             </div>
-
                                         </div>
                                         {% endfor %}
                                     </div>
@@ -596,23 +596,24 @@
                 </section>
 
                 <section id="mobileapps" class="mb-5">
-                    <h4>Mobile Apps</h4>
+                    <h4 class="report-section-header">> MOBILE_CONTAINERS</h4>
                     <div class="row g-3">
                         {% if report.mobile_apps and report.mobile_apps|length > 0 %}
                         {% for app in report.mobile_apps %}
                         <div class="col-12 col-md-6 col-lg-4">
 
-                            <div class="card h-100 shadow-sm ">
+                            <div class="card h-100 bg-transparent border-secondary shadow-sm">
 
-                                <div class="card-body">
+                                <div class="card-body p-4">
 
                                     <!-- Nome -->
-                                    <h5 class="card-title d-flex align-items-center gap-2">
-                                        <i class="bi bi-phone-fill text-primary"></i>
-                                        {{ app.Name }}
+                                    <h5 class="card-title d-flex align-items-center gap-2 text-white fw-bold" style="letter-spacing: 1px;">
+                                        <i class="bi bi-phone-fill" style="color: var(--hacker-green);"></i>
+                                        {{ app.Name | upper }}
                                     </h5>
 
                                     <!-- Descrição -->
+                                    <span class="data-label d-block mt-3">Metadata_Description</span>
                                     <p class="card-text text-muted small">
                                         {{ app.Description or "No description..." }}
                                     </p>
@@ -621,14 +622,14 @@
                                     <div class="mt-3 d-flex gap-2">
 
                                         {% if app.HasIOSVersion %}
-                                        <span class="badge bg-success d-flex align-items-center gap-1">
-                                            <i class="bi bi-apple"></i> iOS
+                                        <span class="badge badge-status badge-active d-flex align-items-center gap-1">
+                                            <i class="bi bi-apple"></i> IOS_DEPLOYED
                                         </span>
                                         {% endif %}
 
                                         {% if app.HasAndroidVersion %}
-                                        <span class="badge bg-success d-flex align-items-center gap-1">
-                                            <i class="bi bi-android2"></i> Android
+                                        <span class="badge badge-status badge-active d-flex align-items-center gap-1">
+                                            <i class="bi bi-android2"></i> ANDROID_DEPLOYED
                                         </span>
                                         {% endif %}
 
@@ -647,8 +648,8 @@
                         {% else %}
 
                         <!-- FALLBACK QUANDO NÃO HÁ APPS -->
-                        <div class="alert alert-warning" role="alert">
-                            <h6 class="alert-heading">No mobile app found.</h6>
+                        <div class="legal-notice w-100" role="alert" style="border-left-color: #6c757d;">
+                            <h6 class="legal-header" style="color: #6c757d;">No mobile app found.</h6>
                             <p>No iOS or Android apps were found for this project.</p>
                         </div>
 
@@ -658,12 +659,12 @@
                 </section>
 
                 <section id="clientvariables" class="mb-5">
-                    <h4>Client Variables</h4>
+                    <h4 class="report-section-header">> CLIENT_VARIABLES</h4>
 
                     {% if report.client_variables and report.client_variables|length > 0 %}
 
                     <div class="table-responsive">
-                        <table class="table-success table table-hover align-middle mb-0 table-active table-bordered">
+                        <table class="table table-hacker align-middle mb-0 table-bordered">
                             <thead>
                                 <tr>
                                     <th>Name</th>
@@ -727,7 +728,7 @@
                     {# --- BOTÃO MOSTRAR MAIS / MENOS --- #}
                     {% if report.client_variables|length > 3 %}
                     <div class="text-center p-2">
-                        <button class="btn btn-primary btn-sm rounded-pill px-4 toggle-clientvars"
+                        <button class="btn btn-hacker btn-sm px-4 toggle-clientvars"
                             data-bs-toggle="collapse" data-bs-target="#clientvars-more">
                             Show all client variables
                         </button>
@@ -747,12 +748,12 @@
                 </section>
 
                 <section id="platformcapabilities" class="mb-5">
-                    <h4>Platform Capabilities</h4>
+                    <h4 class="report-section-header">> PLATFORM_CAPABILITIES</h4>
 
                     {% if report.platform_capabilities and report.platform_capabilities|length > 0 %}
 
                     <div class="table-responsive">
-                        <table class="table-success table table-hover align-middle mb-0 table-active table-bordered">
+                        <table class="table table-hacker align-middle mb-0 table-bordered">
                             <thead>
                                 <tr>
                                     <th>Name</th>
@@ -792,7 +793,7 @@
                     {# --- BOTÃO MOSTRAR MAIS / MENOS --- #}
                     {% if report.platform_capabilities|length > 3 %}
                     <div class="text-center p-2">
-                        <button class="btn btn-primary btn-sm rounded-pill px-4 toggle-clientvars"
+                        <button class="btn btn-hacker btn-sm px-4 toggle-clientvars"
                             data-bs-toggle="collapse" data-bs-target="#capabilities-more">
                             Show all capabilities available
                         </button>
@@ -809,15 +810,17 @@
                 </section>
 
                 <section id="referenceshealth" class="mb-5">
-                    <h4>References Health</h4>
+                    <h4 class="report-section-header">> REFERENCES_HEALTH</h4>
 
                     {% if report.references_health and report.references_health|length > 0 %}
 
                     <div class="table-responsive">
-                        <table class="table-success table table-hover align-middle mb-0 table-active table-bordered">
+                        <table class="table table-hacker align-middle mb-0 table-bordered">
                             <thead>
                                 <tr>
                                     <th>Module</th>
+                                    <th>Status</th>
+                                    <th>Report</th>
                                 </tr>
                             </thead>
 
@@ -825,7 +828,23 @@
                                 {# --- PRIMEIRAS 3 LINHAS --- #}
                                 {% for var in report.references_health[:3] %}
                                 <tr>
-                                    <td>{{ var }}</td>
+                                    <td>{{ var.modulename }}</td>
+                                    <td>
+                                        {% if var.allowtoscan %}
+                                            {% if var.analysis_id %}
+                                                <span class="badge badge-status badge-active me-2">COMPLETED</span>
+                                            {% else %}
+                                                <span class="badge badge-status text-warning border-warning me-2">PENDING</span>
+                                            {% endif %}
+                                            <a href="/?target={{ report.target.full_url.rsplit('/', 1)[0] }}/{{ var.modulename }}" 
+                                            class="text-decoration-none badge badge-status {{ 'badge-active' if var.analysis_id else 'text-warning border-warning' }}" target="_blank">
+                                                <i class="bi bi-terminal me-1"></i> {{ "RE_SCAN" if var.analysis_id else "INIT_SCAN" }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted small">ACCESS_RESTRICTED</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ var.analysis_id }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -835,7 +854,23 @@
                             <tbody class="collapse" id="referenceshealth-more">
                                 {% for var in report.references_health[3:] %}
                                 <tr>
-                                    <td>{{ var }}</td>
+                                    <td>{{ var.modulename }}</td>
+                                    <td>
+                                        {% if var.allowtoscan %}
+                                            {% if var.analysis_id %}
+                                                <span class="badge badge-status badge-active me-2">COMPLETED</span>
+                                            {% else %}
+                                                <span class="badge badge-status text-warning border-warning me-2">PENDING</span>
+                                            {% endif %}
+                                            <a href="/?target={{ report.target.full_url.rsplit('/', 1)[0] }}/{{ var.modulename }}" 
+                                            class="text-decoration-none badge badge-status {{ 'badge-active' if var.analysis_id else 'text-warning border-warning' }}" target="_blank">
+                                                <i class="bi bi-terminal me-1"></i> {{ "RE_SCAN" if var.analysis_id else "INIT_SCAN" }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted small">ACCESS_RESTRICTED</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ var.analysis_id }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -847,7 +882,7 @@
                     {# --- BOTÃO MOSTRAR MAIS / MENOS --- #}
                     {% if report.references_health|length > 3 %}
                     <div class="text-center p-2">
-                        <button class="btn btn-primary btn-sm rounded-pill px-4 toggle-clientvars"
+                        <button class="btn btn-hacker btn-sm px-4 toggle-clientvars"
                             data-bs-toggle="collapse" data-bs-target="#referenceshealth-more">
                             Show all references
                         </button>
@@ -864,12 +899,12 @@
                 </section>
 
                 <section id="roleskey" class="mb-5">
-                    <h4>Roles & Keys</h4>
+                    <h4 class="report-section-header">> ROLES_AND_KEYS</h4>
 
                     {% if report.roles and report.roles|length > 0 %}
 
                     <div class="table-responsive">
-                        <table class="table-success table table-hover align-middle mb-0 table-active table-bordered">
+                        <table class="table table-hacker align-middle mb-0 table-bordered">
                             <thead>
                                 <tr>
                                     <th>Name</th>
@@ -907,7 +942,7 @@
                     {# --- BOTÃO MOSTRAR MAIS / MENOS --- #}
                     {% if report.roles|length > 3 %}
                     <div class="text-center p-2">
-                        <button class="btn btn-primary btn-sm rounded-pill px-4 toggle-clientvars"
+                        <button class="btn btn-hacker btn-sm px-4 toggle-clientvars"
                             data-bs-toggle="collapse" data-bs-target="#rolekeys-more">
                             Show all roles available
                         </button>
@@ -926,24 +961,32 @@
 
         </div>
     </main>
-    <div class="modal fade" id="aiAdviceModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header text-white">
-                    <h5 class="modal-title"><i class="bi bi-robot me-2"></i>IA Helper</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-toggle="modal"
-                        data-bs-target="#aiAdviceModal"></button>
+    <div class="modal fade" id="aiAdviceModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="terminal-window-header d-flex align-items-center justify-content-between">
+                    <div class="terminal-controls">
+                        <span class="control-dot red" data-bs-dismiss="modal" title="Terminate Session"></span>
+                        <span class="control-dot yellow"></span>
+                        <span class="control-dot green"></span>
+                    </div>
+                    <div class="small text-muted opacity-50 text-uppercase fw-bold" style="letter-spacing: 2px;">NEURAL_THREAT_ANALYZER</div>
+                    <div style="min-width: 60px; text-align: right;">
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
                 </div>
                 <div class="modal-body p-4">
-                    <div id="ai-loading" class="text-center d-none">
-                        <div class="spinner-border text-primary" role="status"></div>
-                        <p class="mt-2">Consulting an agent...</p>
+                    <div id="ai-loading" class="text-center d-none my-4">
+                        <div class="spinner-border" style="color: var(--hacker-green);" role="status"></div>
+                        <p class="mt-3 data-label">Querying system vault for threat intel...</p>
                     </div>
-                    <div id="ai-content" style="white-space: pre-line;">
+                    <div id="ai-content" class="small lh-lg" style="white-space: pre-line; font-family: var(--font-mono); color: #e0e0e0;">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-hacker btn-sm px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-check-lg me-1"></i> ACKNOWLEDGE
+                    </button>
                 </div>
             </div>
         </div>

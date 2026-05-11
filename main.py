@@ -99,7 +99,10 @@ def scanningPage():
         flash("Access key not provided.", "error")
         return redirect(url_for('homePage'))
     
-    return render_template('scanning.html', accesskey=guid)
+    data_file, report_file = functions.get_report_paths(guid)
+    report_full = functions.load_json(report_file)
+    
+    return render_template('scanning.html', accesskey=guid,report=report_full)
 
 @app.route('/scanningstream')
 def scanningStream():

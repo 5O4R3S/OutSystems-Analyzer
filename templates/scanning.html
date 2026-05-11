@@ -6,42 +6,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OutSystems Analyzer - Scanning</title>
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/layout.css') }}" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/logo.png') }}">
+    <style>
+        #steps-log {
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: var(--font-mono);
+        }
+        .log-entry {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 4px 0;
+            letter-spacing: 0.5px;
+        }
+        .log-entry:last-child { border-bottom: none; }
+    </style>
 </head>
 
-<body data-bs-theme="dark">
+<body>
+    <div class="mt-3 ms-3 d-flex align-items-center gap-2 small">
+        <div class="text-muted d-flex align-items-center">
+            <i class="bi bi-activity me-1"></i>
+            <span class="me-2 text-uppercase">Analysis_Task: {{ accesskey[:8] }}...</span>
+        </div>
+        <span class="badge badge-status badge-active">STATUS: PROCESSING</span>
+    </div>
+
     <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-8">
-                <figcaption class="blockquote-footer">
-                    <cite title="Lucas Soares">report</cite>: {{ accesskey }}
-                </figcaption>
-                <div class="alert alert-success" role="alert">
-                    <div class="row">
-                        <div class="col-sm-9">
-                            <h4 class="alert-heading d-flex align-items-center">
-                                <div class="spinner-border text-warning me-2" role="status"
-                                    style="width: 1.5rem; height: 1.5rem;">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                Analysis in progress...
-                            </h4>
-                            <br>
-                            <p>The analysis is in progress; we are verifying the target application and collecting
-                                public information to enhance your OSINT report.
-                                </br>
-                                This may take some time... When we finish, you will be automatically redirected to the
-                                results screen with all the data collected about the target.
-                            </p>
+                <div class="terminal-card">
+                    <div class="terminal-window-header">
+                        <div class="terminal-controls">
+                            <span class="control-dot red"></span>
+                            <span class="control-dot yellow"></span>
+                            <span class="control-dot green"></span>
                         </div>
-                        <div class="col-sm-3">
-                            <img src="{{ url_for('static', filename='img/logo-terminal.jpg') }}" class="rounded"
-                                style="width: -webkit-fill-available;">
-                        </div>
+                        <div class="mx-auto small text-muted opacity-50" style="letter-spacing: 2px;">ANALYZER — EXECUTION_LOG</div>
                     </div>
-
-                    <hr>
-                    <div id="steps-log"></div>
+                    <div class="p-4">
+                        <div class="row align-items-center">
+                            <div class="col-sm-9">
+                                <h3 class="fw-bold text-uppercase mb-4" style="letter-spacing: 2px;">
+                                    Analysis <span style="color: var(--hacker-green);">In_Progress</span>
+                                </h3>
+                                <p class="text-muted small lh-base">
+                                    <i class="bi bi-info-circle me-1"></i> Gathering public metadata and verifying technical handshake protocols for 
+                                    <span class="text-white fw-bold">/{{ report.target.modulename }}</span>.
+                                    <br><br>
+                                    This session is running locally. You will be redirected to the secure vault once the audit log reaches EOF.
+                                </p>
+                            </div>
+                            <div class="col-sm-3 text-center">
+                                <div class="spinner-border mb-3" role="status" style="width: 3rem; height: 3rem; color: var(--hacker-green);">
+                                        <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="steps-log" class="mt-4 rounded"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -54,23 +82,21 @@
             const div = document.getElementById("steps-log");
 
             // Remove destaque anterior
-            const previous = div.querySelector(".text-danger");
+            const previous = div.querySelector(".text-white");
             if (previous) {
-                previous.classList.remove("text-danger");
+                previous.classList.replace("text-white", "text-muted");
+                previous.classList.remove("fw-bold");
             }
 
             // Cria o novo item com destaque
             const html_content = `
-            <p class="mb-0 d-flex align-items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-terminal me-2" viewBox="0 0 16 16">
-                    <path d="M6 9a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3A.5.5 0 0 1 6 9M3.854 4.146a.5.5 0 1 0-.708.708L4.793 6.5 3.146 8.146a.5.5 0 1 0 .708.708l2-2a.5.5 0 0 0 0-.708z"/>
-                    <path d="M2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2zm12 1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/>
-                </svg>
-                <span class="fw-bold text-danger">${event.data}</span>
-            </p>`;
+            <div class="log-entry small d-flex align-items-center">
+                <span class="me-2" style="color: var(--hacker-green);">[✓]</span>
+                <span class="fw-bold text-white" style="font-family: var(--font-mono);">${event.data}</span>
+            </div>`;
 
             div.innerHTML += html_content;
+            div.scrollTop = div.scrollHeight;
 
             if (event.data === "done") {
                 eventSource.close();

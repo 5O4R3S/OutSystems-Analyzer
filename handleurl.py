@@ -1,4 +1,4 @@
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 def resolve_url(url: str) -> dict | None:
     """
@@ -61,6 +61,12 @@ def resolve_url(url: str) -> dict | None:
         'modulename': modulename,
     }
 
-if __name__ == '__main__':
-    success = resolve_url("https://www.cmvm.pt/PInstitucional/")
-    print(f"{success}")
+def toggle_www(target_url: str) -> str:
+    """Alterna a presença de 'www.' no netloc da URL."""
+    parsed = urlparse(target_url)
+    netloc = parsed.netloc
+    if netloc.startswith("www."):
+        new_netloc = netloc.replace("www.", "", 1)
+    else:
+        new_netloc = f"www.{netloc}"
+    return urlunparse(parsed._replace(netloc=new_netloc))

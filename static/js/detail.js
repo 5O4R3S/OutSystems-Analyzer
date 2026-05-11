@@ -26,7 +26,9 @@ document.addEventListener("DOMContentLoaded", function () {
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll("[data-bs-toggle='collapse']").forEach(function (header) {
         const target = document.querySelector(header.dataset.bsTarget);
-        const card = header.closest(".card");
+        const card = header.closest(".card, .inspector-row");
+
+        if (!target || !card) return;
 
         target.addEventListener("show.bs.collapse", () => {
             card.classList.add("expanded");
@@ -78,6 +80,24 @@ document.addEventListener('DOMContentLoaded', function () {
             } finally {
                 // Esconde o carregando
                 loadingIndicator.classList.add('d-none');
+            }
+        });
+    });
+});
+
+// Lógica para copiar para a área de transferência
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".copy-to-clipboard").forEach(function (button) {
+        button.addEventListener("click", function () {
+            const targetId = this.dataset.targetId;
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+                const textToCopy = targetElement.textContent.trim();
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    // Opcional: feedback visual para o usuário (ex: mudar ícone para check)
+                    this.innerHTML = '<i class="bi bi-check-lg text-success"></i>';
+                    setTimeout(() => this.innerHTML = '<i class="bi bi-clipboard"></i>', 1500);
+                }).catch(err => console.error('Failed to copy text: ', err));
             }
         });
     });

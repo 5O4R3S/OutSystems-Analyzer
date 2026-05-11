@@ -6,93 +6,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OutSystems Analyzer</title>
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/layout.css') }}" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/logo.png') }}">
 </head>
 
-<body data-bs-theme="dark">
-<div class="mt-3 ms-3 d-flex align-items-center gap-2">
-    <a class="icon-link link-underline-dark d-flex align-items-center" href="{{ url_for('configPage') }}" style="text-decoration: none;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-gear-wide-connected me-1" viewBox="0 0 16 16">
-            <path d="M7.068.727c.243-.97 1.62-.97 1.864 0l.071.286a.96.96 0 0 0 1.622.434l.205-.211c.695-.719 1.888-.03 1.613.931l-.08.284a.96.96 0 0 0 1.187 1.187l.283-.081c.96-.275 1.65.918.931 1.613l-.211.205a.96.96 0 0 0 .434 1.622l.286.071c.97.243.97 1.62 0 1.864l-.286.071a.96.96 0 0 0-.434 1.622l.211.205c.719.695.03 1.888-.931 1.613l-.284-.08a.96.96 0 0 0-1.187 1.187l.081.283c.275.96-.918 1.65-1.613.931l-.205-.211a.96.96 0 0 0-1.622.434l-.071.286c-.243.97-1.62.97-1.864 0l-.071-.286a.96.96 0 0 0-1.622-.434l-.205.211c-.695.719-1.888.03-1.613-.931l.08-.284a.96.96 0 0 0-1.186-1.187l-.284.081c-.96.275-1.65-.918-.931-1.613l.211-.205a.96.96 0 0 0-.434-1.622l-.286-.071c-.97-.243-.97-1.62 0-1.864l.286-.071a.96.96 0 0 0 .434-1.622l-.211-.205c-.719-.695-.03-1.888.931-1.613l.284.08a.96.96 0 0 0 1.187-1.186l-.081-.284c-.275-.96.918-1.65 1.613-.931l.205.211a.96.96 0 0 0 1.622-.434zM12.973 8.5H8.25l-2.834 3.779A4.998 4.998 0 0 0 12.973 8.5m0-1a4.998 4.998 0 0 0-7.557-3.779l2.834 3.78zM5.048 3.967l-.087.065zm-.431.355A4.98 4.98 0 0 0 3.002 8c0 1.455.622 2.765 1.615 3.678L7.375 8zm.344 7.646.087.065z" />
-        </svg>
-        <span class="me-2">Configurations</span>
+<body>
+<div class="mt-3 ms-3 d-flex align-items-center gap-2 small">
+    <a class="text-muted text-decoration-none d-flex align-items-center" href="{{ url_for('configPage') }}">
+        <i class="bi bi-gear-wide-connected me-1"></i>
+        <span class="me-2">SYS_CONFIG</span>
     </a>
 
-    <span class="badge {% if config.quick_mode %}bg-success{% else %}bg-secondary{% endif %}" style="padding-top: 0.4em;">
-        quick_mode: {% if config.quick_mode %}on{% else %}off{% endif %}
+    <span class="badge badge-status {% if config.quick_mode %}badge-active{% endif %}">
+        QUICK_MODE: {% if config.quick_mode %}1{% else %}0{% endif %}
     </span>
 
-    <span class="badge {% if config.debug_mode %}bg-success{% else %}bg-secondary{% endif %}" style="padding-top: 0.4em;">
-        debug_mode: {% if config.debug_mode %}on{% else %}off{% endif %}
+    <span class="badge badge-status {% if config.debug_mode %}badge-active{% endif %}">
+        DEBUG: {% if config.debug_mode %}1{% else %}0{% endif %}
     </span>
 </div>
+
     <div class="container">
         <section class="row justify-content-center text-center mt-5" id="search" style="margin-bottom: 100px;">
-            <div class="col-md-8 col-lg-8"> <img src="{{ url_for('static', filename='img/logo.png') }}"
+            <div class="col-md-8 col-lg-8">
+                <img src="{{ url_for('static', filename='img/logo.png') }}"
                     class="rounded mx-auto d-block" style="max-width: 120px;">
 
-                <h4 class="mt-4">OutSystems Analyzer</h4>
+                <h2 class="mt-4 fw-bold text-uppercase" style="letter-spacing: 4px;">
+                    OutSystems <span style="color: var(--hacker-green);">Analyzer</span><span class="cursor-blink"></span>
+                </h2>
 
                 <p>
-                    <small>Your scans are <mark>completely private</mark>, executed and saved on your
-                        machine.</small>
+                    <small class="text-muted">Your scans are <span class="text-white">completely private</span>, executed and saved on your machine.</small>
                 </p>
 
-                <form method="POST" action="{{ url_for('verifyTarget') }}" class="mt-5">
-                    <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon3">URL</span>
-                        <input type="url" class="form-control" placeholder="https://www.domain.com/MyApp"
-                            aria-describedby="button-addon2" id="urlToScan" name="urlToScan" required>
-
-                        <button class="btn btn-primary d-flex align-items-center" type="submit" id="button-addon2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                class="bi bi-arrow-right-circle-fill me-2" viewBox="0 0 16 16">
-                                <path
-                                    d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0M4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5z" />
-                            </svg>
-                            Start scan
-                        </button>
+                <div class="terminal-card mt-5">
+                    <div class="terminal-window-header">
+                        <div class="terminal-controls">
+                            <span class="control-dot red"></span>
+                            <span class="control-dot yellow"></span>
+                            <span class="control-dot green"></span>
+                        </div>
+                        <div class="mx-auto small text-muted opacity-50" style="letter-spacing: 2px;">BASH — 80x24</div>
                     </div>
-                </form>
-                <div>
-                    <a class="icon-link link-underline-dark" data-bs-toggle="modal" data-bs-target="#ModalScanHistory"
-                        style="cursor: pointer;" id="openModalHistory">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="bi" viewBox="0 0 16 16" aria-hidden="true">
-                            <path
-                                d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022zm2.004.45a7 7 0 0 0-.985-.299l.219-.976q.576.129 1.126.342zm1.37.71a7 7 0 0 0-.439-.27l.493-.87a8 8 0 0 1 .979.654l-.615.789a7 7 0 0 0-.418-.302zm1.834 1.79a7 7 0 0 0-.653-.796l.724-.69q.406.429.747.91zm.744 1.352a7 7 0 0 0-.214-.468l.893-.45a8 8 0 0 1 .45 1.088l-.95.313a7 7 0 0 0-.179-.483m.53 2.507a7 7 0 0 0-.1-1.025l.985-.17q.1.58.116 1.17zm-.131 1.538q.05-.254.081-.51l.993.123a8 8 0 0 1-.23 1.155l-.964-.267q.069-.247.12-.501m-.952 2.379q.276-.436.486-.908l.914.405q-.24.54-.555 1.038zm-.964 1.205q.183-.183.35-.378l.758.653a8 8 0 0 1-.401.432z" />
-                            <path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0z" />
-                            <path
-                                d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5" />
-                        </svg>
-                        Scan history
+                    <div class="p-4">
+                        <form method="POST" action="{{ url_for('verifyTarget') }}">
+                            <div class="terminal-input-group mb-3">
+                                <span class="opacity-75">target:~$</span>
+                                <input type="url" class="form-control form-control-hacker" 
+                                    placeholder="https://domain.com/App"
+                                    id="urlToScan" name="urlToScan" required>
+                            </div>
+                            <button class="btn btn-hacker w-100 mt-2" type="submit" id="button-addon2">
+                                <i class="bi bi-terminal me-2"></i>execute --analyze
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a class="text-muted text-decoration-none small" data-bs-toggle="modal" data-bs-target="#ModalScanHistory"
+                        style="cursor: pointer; letter-spacing: 1px;" id="openModalHistory">
+                        <i class="bi bi-cpu me-1"></i> VIEW_LOG_HISTORY
                     </a>
                 </div>
             </div>
         </section>
-        <section id="recommendations">
 
-            <div class="alert alert-success" role="alert">
-                <h4 class="alert-heading">Legal Notice and Terms of Ethical Use</h4>
-                <p>This tool was developed by <a href="{{ config.lucas_url_page }}" class="text-reset"
-                        target="_blank">Lucas Soares (5O4R3S)</a>, and its use is free.</p>
-                <hr>
-                <p class="mb-0">
-                    Use this tool exclusively in applications, environments, or infrastructures for which <mark>you have
-                        explicit and documented authorization</mark>. Performing security tests without permission
-                    constitutes a legal violation and may result in civil and criminal penalties, as per applicable
-                    law.</br>
-                    The development team, as well as the community that maintains and updates this tool, <mark>is not
-                        responsible for any misuse</mark>, damages caused, misinterpretations, or consequences arising
-                    from its use. <mark>All responsibility rests entirely with the professional performing the
-                        scan</mark>, including the obligation to ensure they have formal authorization to perform any
-                    type of analysis.</br>
-                    By using this tool, you declare that you understand these terms and agree to follow ethical and
-                    legal security research practices.
+        <section id="recommendations" class="mb-3">
+            <div class="legal-notice" role="alert">
+                <div class="legal-header">
+                    <i class="bi bi-shield-lock-fill me-2"></i> Legal Notice & Ethical Usage
+                </div>
+                <p class="mb-3 text-muted">
+                    Developed by <a href="{{ config.lucas_url_page }}" class="text-info" target="_blank">5O4R3S [Lucas Soares]</a>. 
+                    System Version: <span class="text-white">v{{ config.version }}</span>
+                </p>
+                <p class="mb-0 text-muted" style="font-size: 0.8rem;">
+                    Use this tool exclusively in applications, environments, or infrastructures for which <span class="text-white">you have explicit and documented authorization</span>; Performing security tests without permission constitutes a legal violation and may result in civil and criminal penalties, as per applicable law.</br></br>
+                    The development team, as well as the community that maintains and updates this tool, <span class="text-white">is not responsible for any misuse</span>, damages caused, misinterpretations, or consequences arising from its use. <span class="text-white">All responsibility rests entirely with the professional performing the scan</span>, including the obligation to ensure they have formal authorization to perform any type of analysis.</br></br>
+                    By using this tool, you declare that you understand these terms and agree to follow ethical and legal security research practices.
                 </p>
             </div>
-            <figcaption class="blockquote-footer">
-                <cite title="Version">v{{ config.version }}</cite>
-            </figcaption>
         </section>
 
         <!-- Toas de erro (abre automaticamente se houver flash de erro) -->
@@ -114,17 +110,24 @@
             aria-hidden="true">
             <div class="modal-dialog modal-dialog-scrollable modal-lg">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="ScanHistoryModalLabel">History</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="terminal-window-header">
+                        <div class="terminal-controls">
+                            <span class="control-dot red" data-bs-dismiss="modal" style="cursor: pointer;" title="CLOSE_VAULT"></span>
+                            <span class="control-dot yellow"></span>
+                            <span class="control-dot green"></span>
+                        </div>
+                        <div class="mx-auto small text-muted opacity-50" style="letter-spacing: 2px;">AUDIT_LOGS — SESSION_HISTORY</div>
                     </div>
-                    <div class="modal-body">
-                        <div id="modal-content-items" class="list-group"></div>
+                    <div class="modal-body p-4">
+                        <div id="modal-content-items"></div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-danger" onclick="clearAllHistory()">Clear All
-                            History</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-hacker-danger" onclick="clearAllHistory()">
+                            <i class="bi bi-trash3 me-2"></i>CLEAR_ALL_LOGS
+                        </button>
+                        <button type="button" class="btn btn-hacker" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-2"></i>CLOSE_WINDOW
+                        </button>
                     </div>
                 </div>
             </div>
@@ -163,35 +166,37 @@
                 fetch("/get_scanhistory_items")
                     .then(response => response.json())
                     .then(data => {
-                        let html = "";
+                        let html = `
+                            <div class="history-header">
+                                <div class="col-time">TIMESTAMP</div>
+                                <div class="col-target">TARGET_OBJECT</div>
+                                <div class="col-actions">ACTION</div>
+                            </div>
+                        `;
+
                         // Se não houver dados
                         if (data.length === 0) {
-                            html = `
+                            html += `
                                     <div class="text-center py-4">
-                                        <p class="text-muted">No scan history found.</p>
+                                        <p class="text-muted small">>> NO_RECORDS_IN_DATABASE</p>
                                     </div>
                                     `;
                         } else {
                             data.forEach(item => {
                                 const formattedDate = item.createdate.split(" ")[0];
                                 html += `
-                                    <div id="item-${item.accesskey}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-0">
-                                        <a href="/detail?accesskey=${item.accesskey}" target="_blank" class="flex-grow-1 p-3 text-decoration-none text-dark d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <span class="small fw-bold text-warning-emphasis">${formattedDate}</span><br>
-                                                <span class="text-muted">${item.domain}/${item.appname}</span>
-                                            </div>
-                                            
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-arrow-right-circle-fill fs-4 text-success" viewBox="0 0 16 16">
-  <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0M4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5z"/>
-</svg>
-                                        </a>
-
-                                        <button class="btn btn-link text-danger pe-3" onclick="deleteItem(event, '${item.accesskey}')" title="Delete Scan">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash-fill text-danger" viewBox="0 0 16 16">
-  <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
-</svg>
-                                        </button>
+                                    <div id="item-${item.accesskey}" class="history-entry">
+                                        <div class="col-time">${formattedDate}</div>
+                                        <div class="col-target text-truncate">
+                                            <a href="/detail?accesskey=${item.accesskey}" target="_blank" class="history-link">
+                                                <span class="text-muted small">${item.domain}/</span><span class="app-name">${item.appname}</span>
+                                            </a>
+                                        </div>
+                                        <div class="col-actions">
+                                            <button class="btn btn-link text-danger p-0" onclick="deleteItem(event, '${item.accesskey}')">
+                                                <i class="bi bi-trash3 fs-6"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 `;
                             });
@@ -270,6 +275,22 @@
                         alert("Critical error connecting to server.");
                     });
             }
+            document.addEventListener("DOMContentLoaded", function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const targetUrl = urlParams.get('target');
+                if (targetUrl) {
+                    const input = document.getElementById('urlToScan');
+                    const button = document.getElementById('button-addon2');
+
+                    if (input && button) {
+                        input.value = targetUrl;
+
+                        setTimeout(() => {
+                            button.click();
+                        }, 100); 
+                    }
+                }
+            });
         </script>
     </div>
 </body>
