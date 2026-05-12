@@ -329,6 +329,139 @@ def check_ckeditor_vulnerability(accesskey: str) -> bool:
                 
     return False
 
+def check_ckeditor_upload_vulnerability(accesskey: str) -> bool:
+    if CONFIG.get("debug_mode", True):
+        print(f"Testing Unrestricted File Upload on CKEditor...")
+
+    _, report_file = get_report_paths(accesskey)
+    report = load_json(report_file)
+    if not report: return False
+
+    sub = report["target"].get("subdomain", "")
+    dom = report["target"].get("domain", "")
+    sub_part = f"{sub}." if sub else ""
+    environment = f"https://{sub_part}{dom}"
+    url = f"{environment}/CKEditorReactive/rest/api/Upload"
+
+    # Payload de teste (simulando um arquivo JPEG)
+    payload_content = "OS-ANALYZER-SECURITY-TEST-FILE-UPLOAD" * 10
+    files = {
+        "file": ("audit_test.jpeg", payload_content, "image/jpeg")
+    }
+    data = {"name": "upload"}
+
+    try:
+        # Utilizamos o http_post que já lida com retentativas e toggling de www
+        response = http_post(url, data=data, files=files)
+
+        if response and response.status_code == 200:
+            res_data = response.json()
+            if res_data.get("uploaded") == 1:
+                uploaded_path = res_data.get("url", "")
+                
+                vuln_entry = {
+                    "component": "CKEditor Reactive",
+                    "version": "Detected via API",
+                    "cve": "Unrestricted File Upload (CWE-434)",
+                    "severity": "CRITICAL",
+                    "vulnerable": True,
+                    "summary": f"Unauthenticated file upload allowed at /rest/api/Upload. Test payload stored at: {environment}{uploaded_path}"
+                }
+                report["vulnerabilities"].append(vuln_entry)
+                save_json(report_file, report)
+                return True
+    except Exception as e:
+        if CONFIG.get("debug_mode", True):
+            print(f"Error testing CKEditor Upload: {e}")
+    return False
+
+def check_froala_vulnerability(accesskey: str) -> bool:
+    if CONFIG.get("debug_mode", True):
+        print(f"Checking for Froala Editor vulnerabilities...")
+
+    _, report_file = get_report_paths(accesskey)
+    report = load_json(report_file)
+    if not report: return False
+
+    sub = report["target"].get("subdomain", "")
+    dom = report["target"].get("domain", "")
+    sub_part = f"{sub}." if sub else ""
+    
+    # URL baseada no componente Froala Editor no ecossistema OutSystems
+    url = f"https://{sub_part}{dom}/FroalaEditor_Demo/Blocks/FroalaEditor/Scripts/froala_editor.js"
+
+    response = http_get(url)
+    if response and response.status_code == 200:
+        # Regex para buscar VERSION="..."
+        match = re.search(r'VERSION\s*=\s*["\']([\d\.]+)["\']', response.text)
+        if match:
+            version_str = match.group(1)
+            try:
+                # Comparação robusta de versão usando tuplas
+                version_tuple = tuple(map(int, version_str.split('.')))
+                vulnerable_threshold = (4, 1, 1)
+
+                is_vulnerable = version_tuple <= vulnerable_threshold
+
+                vuln_entry = {
+                    "component": "Froala Editor",
+                    "version": version_str,
+                    "cve": "CVE-2023-41592",
+                    "severity": "HIGH" if is_vulnerable else "INFO",
+                    "vulnerable": is_vulnerable,
+                    "summary": "Versions <= 4.1.1 are susceptible to DOM-based XSS via malicious input." if is_vulnerable else "Version is above known high-risk CVE thresholds."
+                }
+
+                report["vulnerabilities"].append(vuln_entry)
+                save_json(report_file, report)
+                return True
+            except Exception as e:
+                print(f"Error parsing Froala version: {e}")
+    return False
+
+def check_pdftron_vulnerability(accesskey: str) -> bool:
+    if CONFIG.get("debug_mode", True):
+        print(f"Checking for PDFTron vulnerabilities...")
+
+    _, report_file = get_report_paths(accesskey)
+    report = load_json(report_file)
+    if not report: return False
+
+    sub = report["target"].get("subdomain", "")
+    dom = report["target"].get("domain", "")
+    sub_part = f"{sub}." if sub else ""
+    
+    # URL baseada no componente PDFTron no ecossistema OutSystems
+    url = f"https://{sub_part}{dom}/PDFTron/scripts/PDFTron.webviewer_min.js"
+
+    response = http_get(url)
+    if response and response.status_code == 200:
+        # Regex para buscar a versão no formato X.Y.Z
+        # O padrão 'VERSION="X.Y.Z"' ou similar é comum, mas o seu exemplo sugere apenas 'X.Y.Z'
+        match = re.search(r'\d+\.\d+\.\d+', response.text)
+        if match:
+            version_str = match.group(0) # match.group(0) pega a string completa que corresponde ao regex
+            
+            # Lógica de comparação de versão: exatamente '11.1.0'
+            is_vulnerable = (version_str == '11.1.0')
+
+            vuln_entry = {
+                "component": "PDFTron WebViewer",
+                "version": version_str,
+                "cve": "CVE-XXXX-XXXXX (Placeholder)", # Substitua pela CVE real se houver
+                "severity": "HIGH" if is_vulnerable else "INFO",
+                "vulnerable": is_vulnerable,
+                "summary": "Version 11.1.0 is known to have specific vulnerabilities (e.g., XSS, information disclosure)." if is_vulnerable else "Version is not 11.1.0, or is above known high-risk CVE thresholds."
+            }
+
+            report["vulnerabilities"].append(vuln_entry)
+            save_json(report_file, report)
+            return True
+        else:
+            if CONFIG.get("debug_mode", True):
+                print(f"PDFTron version not found in {url}")
+    return False
+
 def analyze_security_headers(headers: dict):
     relevant = [
         "Content-Security-Policy",
@@ -468,13 +601,17 @@ def get_app_definitions(accesskey: str) -> bool:
     sub = f"{subdomain}." if subdomain else ""
     base_url = f"https://{sub}{domain}"
 
-    search_pattern = f"{modulename}.appDefinition"
+    search_pattern = "appDefinition"
     url_versions = report_map.get("manifest", {}).get("urlVersions", {})
     app_definitions = next(
         (path for path in url_versions.keys()
-        if search_pattern in path),
+        if search_pattern.lower() in path.lower()),
         None
     )
+
+    if not app_definitions:
+        print(f"AppDefinition path not found for module {modulename}")
+        return False
 
     url = f"{base_url}{app_definitions}"
 
@@ -485,7 +622,8 @@ def get_app_definitions(accesskey: str) -> bool:
 
     try:
         response = http_get(url, headers)
-        response.raise_for_status()
+        if not response:
+            return False
         js_content = response.text
     except Exception as e:
         print(f"Error downloading appDefinition.js: {e}")
@@ -675,13 +813,17 @@ def get_react_version(accesskey: str) -> bool:
     subdomain_part = f"{subdomain}." if subdomain else ""
     environment = f"https://{subdomain_part}{domain}"
 
-    search_pattern = f"OutSystemsReactView"
+    search_pattern = "OutSystemsReactView"
     url_versions = report_map.get("manifest", {}).get("urlVersions", {})
     react_view = next(
         (path for path in url_versions.keys()
-        if search_pattern in path),
+        if search_pattern.lower() in path.lower()),
         None
     )
+
+    if not react_view:
+        print("ReactView path not found in manifest.")
+        return False
 
     js_url = f"{environment}{react_view}"
 
@@ -692,7 +834,8 @@ def get_react_version(accesskey: str) -> bool:
 
     try:
         response = http_get(js_url, headers)
-        response.raise_for_status()
+        if not response:
+            return False
         js_content = response.text
     except Exception as e:
         print(f"Error downloading JS: {e}")
@@ -743,10 +886,10 @@ def get_references_health(accesskey: str) -> bool:
     subdomain_part = f"{subdomain}." if subdomain else ""
     
     # --- Busca original do path ---
-    search_pattern = f"{modulename}.referencesHealth"
+    search_pattern = "referencesHealth"
     url_versions = report_map.get("manifest", {}).get("urlVersions", {})
     client_health = next(
-        (path for path in url_versions.keys() if search_pattern in path),
+        (path for path in url_versions.keys() if search_pattern.lower() in path.lower()),
         None
     )
 
@@ -837,13 +980,17 @@ def get_client_variables(accesskey: str) -> bool:
     subdomain_part = f"{subdomain}." if subdomain else ""
     environment = f"https://{subdomain_part}{domain}"
 
-    search_pattern = f"{modulename}.clientVariables"
+    search_pattern = "clientVariables"
     url_versions = report_map.get("manifest", {}).get("urlVersions", {})
     client_variables = next(
         (path for path in url_versions.keys()
-        if search_pattern in path),
+        if search_pattern.lower() in path.lower()),
         None
     )
+
+    if not client_variables:
+        print(f"ClientVariables path not found for module {modulename}")
+        return False
 
     js_url = f"{environment}{client_variables}"
 
@@ -854,7 +1001,8 @@ def get_client_variables(accesskey: str) -> bool:
 
     try:
         response = http_get(js_url, headers)
-        response.raise_for_status()
+        if not response:
+            return False
         js_content = response.text
     except Exception as e:
         print(f"Error downloading clientVariables JS: {e}")
@@ -1402,7 +1550,8 @@ def download_screen_js_files(accesskey: str) -> bool:
         })
         try:
             response = http_get(full_url, headers)
-            response.raise_for_status()
+            if not response:
+                continue
             js_content = response.text
         except Exception as e:
             print(f"Error downloading JS for screen {screen_name}: {e}")
@@ -1680,13 +1829,27 @@ def capture_all_screens_xhr(accesskey: str) -> bool:
             
             xhr_results = []
             success_capture = False
+            captured_keys = set() # To prevent duplicate captures (Method + URL + Body)
 
             for current_url in urls_to_try:
 
                 def handle_request(request):
                     if request.resource_type == "xhr":
                         url = request.url.lower()
-                        if not any(ignore in url for ignore in ["moduleversioninfo", "moduleinfo"]):
+                        # Noise reduction: ignore internal OutSystems technical requests
+                        ignore_list = [
+                            "moduleversioninfo", 
+                            "moduleinfo", 
+                            "/ect_provider/", 
+                            "/moduleservices/log", 
+                            "/common/login", 
+                            "dataactiongetsp"
+                        ]
+                        
+                        req_key = (request.method, request.url, request.post_data)
+
+                        if not any(ignore in url for ignore in ignore_list) and req_key not in captured_keys:
+                            captured_keys.add(req_key)
                             xhr_results.append({
                                 "url": request.url,
                                 "method": request.method,
@@ -1696,8 +1859,11 @@ def capture_all_screens_xhr(accesskey: str) -> bool:
 
                 def handle_response(response):
                     if response.request.resource_type == "xhr":
+                        req = response.request
+                        req_key = (req.method, req.url, req.post_data)
+                        
                         for entry in xhr_results:
-                            if entry["url"] == response.url and entry["response"] is None:
+                            if (entry["method"], entry["url"], entry["post_data"]) == req_key and entry["response"] is None:
                                 try:
                                     entry["response"] = {
                                         "status": response.status,
@@ -1766,9 +1932,15 @@ def get_roles(accesskey: str) -> bool:
     url_versions = report_map.get("manifest", {}).get("urlVersions", {})
     client_controller = next(
         (path for path in url_versions.keys()
-        if search_pattern in path),
+        if search_pattern.lower() in path.lower() and path.endswith(".js")),
         None
     )
+
+    if not client_controller:
+        print(f"Controller path (Roles) not found for module {modulename}")
+        report["roles"] = []
+        save_json(report_file, report)
+        return False
 
     js_url = f"{environment}{client_controller}"
 
@@ -1779,43 +1951,190 @@ def get_roles(accesskey: str) -> bool:
 
     try:
         response = http_get(js_url, headers)
-        response.raise_for_status()
+        if not response:
+            report["roles"] = []
+            save_json(report_file, report)
+            return False
         js_content = response.text
+
+        block_match = re.search(
+            r'Controller\.prototype\.roles\s*=\s*\{(.*?)\};',
+            js_content,
+            re.DOTALL
+        )
+
+        if not block_match:
+            report["roles"] = []
+            save_json(report_file, report)
+            return False
+
+        block = block_match.group(1)
+        pattern = r'(\w+)\s*:\s*\{\s*roleKey\s*:\s*"([^"]+)"'
+        matches = re.findall(pattern, block)
+        roles = [{"name": name, "rolekey": rolekey} for name, rolekey in matches]
+
+        # --- MELHORIA OPÇÃO 1: Identificar Uso das Roles ---
+        pages_dir = os.path.join(os.path.dirname(report_file), "pages_js")
+        for role in roles:
+            usage_screens = []
+            if os.path.exists(pages_dir):
+                for filename in os.listdir(pages_dir):
+                    if filename.endswith("_mvc.js"):
+                        file_path = os.path.join(pages_dir, filename)
+                        with open(file_path, "r", encoding="utf-8") as f:
+                            content = f.read()
+                            # Procura chamadas de checkRole para esta role específica
+                            if f".checkRole(model.roles.{role['name']})" in content or f"roles.{role['name']}" in content:
+                                usage_screens.append(filename.replace("_mvc.js", ""))
+            role["used_in_screens"] = usage_screens
+
+        report["roles"] = roles
+        save_json(report_file, report)
+        
+        if CONFIG.get("debug_mode", True):
+            print(f"Checking and saving roles: {roles}")
+        return True
+
     except Exception as e:
-        print(f"Error downloading controller JS: {e}")
-        report["roles"] = []
-        save_json(report_file, report)
+        print(f"Error processing roles: {e}")
         return False
 
-    block_match = re.search(
-        r'Controller\.prototype\.roles\s*=\s*\{(.*?)\};',
-        js_content,
-        re.DOTALL
-    )
-
-    if not block_match:
-        print("No roles block found.")
-        report["roles"] = []
-        save_json(report_file, report)
-        return False
-
-    block = block_match.group(1)
-
-    pattern = r'(\w+)\s*:\s*\{\s*roleKey\s*:\s*"([^"]+)"'
-    matches = re.findall(pattern, block)
-
-    roles = []
-    for name, rolekey in matches:
-        roles.append({
-            "name": name,
-            "rolekey": rolekey
-        })
-
-    report["roles"] = roles
-    save_json(report_file, report)
-
+def extract_custom_js_blocks(accesskey: str) -> bool:
     if CONFIG.get("debug_mode", True):
-        print(f"Checking and saving roles: {roles}")
+        print(f"Inspecting custom JavaScript Element blocks...")
+    _, report_file = get_report_paths(accesskey)
+    report = load_json(report_file)
+    if not report: return False
+
+    pages_dir = os.path.join(os.path.dirname(report_file), "pages_js")
+    if not os.path.exists(pages_dir): return False
+
+    findings = []
+    js_block_pattern = re.compile(r'(?:var|let|const)\s+(\w+JS)\s*=\s*\(\s*function\s*\(\)\s*\{([\s\S]*?)\}\s*\)\.call\(this\);')
+    sensitive_keywords = ["apiKey", "secret", "token", "password", "auth", "credentials", "firebase", "google_maps"]
+
+    for filename in os.listdir(pages_dir):
+        if filename.endswith("_mvc.js"):
+            with open(os.path.join(pages_dir, filename), "r", encoding="utf-8") as f:
+                content = f.read()
+                for match in js_block_pattern.finditer(content):
+                    block_name = match.group(1)
+                    block_code = match.group(2).strip()
+                    
+                    findings.append({
+                        "screen": filename.replace("_mvc.js", ""),
+                        "element_name": block_name,
+                        "code_preview": block_code,
+                        "suspicious": any(word.lower() in block_code.lower() for word in sensitive_keywords)
+                    })
+
+    report["custom_js_findings"] = findings
+    save_json(report_file, report)
+    return True
+
+def analyze_outsystems_runtime(accesskey: str) -> bool:
+    if CONFIG.get("debug_mode", True):
+        print(f"Analyzing Client Runtime (CSRF, Native, Internal APIs)...")
+    _, report_file = get_report_paths(accesskey)
+    report = load_json(report_file)
+    if not report:
+        return False
+
+    # CSRF Analysis
+    report["runtime_csrf"] = {
+        "header": "X-CSRFToken",
+        "anonymous_token": "N/A - Static Analysis",
+        "cookie_regex": "osCSRFToken"
+    }
+
+    # Native / Hybrid Detection
+    pages_dir = os.path.join(os.path.dirname(report_file), "pages_js")
+    clues = []
+    if os.path.exists(pages_dir):
+        for filename in os.listdir(pages_dir):
+            if filename.endswith("_mvc.js"):
+                with open(os.path.join(pages_dir, filename), "r", encoding="utf-8") as f:
+                    content = f.read().lower()
+                    if "cordova" in content: clues.append("Cordova")
+                    if "osnative" in content: clues.append("OSNative")
+                    if "outsystemsbinary" in content: clues.append("OSBinary")
+    
+    clues = list(set(clues))
+    report["native_integration"] = {
+        "is_hybrid": len(clues) > 0,
+        "clues": clues,
+        "risk": "Potential JS-to-Native bridge vulnerability if CSRF/XSS is present." if clues else "Pure web runtime."
+    }
+
+    # Internal Endpoints Detection
+    internal_keywords = ["/servicecenter/", "/lifetime/", "/ect_provider/", "/customercare/", "/ossys/"]
+    internal_eps = []
+    if "endpoints" in report:
+        for entry in report["endpoints"]:
+            for item in entry.get("rest", []):
+                ep = item.get("endpoint", "").lower()
+                if any(k in ep for k in internal_keywords):
+                    internal_eps.append(ep)
+    
+    report["runtime_endpoints"] = list(set(internal_eps))
+
+    save_json(report_file, report)
+    return True
+
+def extract_secrets_from_js(accesskey: str) -> bool:
+    if CONFIG.get("debug_mode", True):
+        print(f"Starting deep secret scan on all manifest JS files...")
+    data_file, report_file = get_report_paths(accesskey)
+    report_map = load_json(data_file)
+    report = load_json(report_file)
+
+    if not report or not report_map:
+        return False
+
+    subdomain = report["target"].get("subdomain", "")
+    domain = report["target"].get("domain", "")
+    sub_part = f"{subdomain}." if subdomain else ""
+    environment = f"https://{sub_part}{domain}"
+
+    url_versions = report_map.get("manifest", {}).get("urlVersions", {})
+    js_files = [path for path in url_versions.keys() if path.endswith(".js")]
+
+    # Padrões comuns de segredos em JS (atribuições de strings)
+    # Procura por chaves seguidas de :, = ou : " com strings de pelo menos 8 caracteres
+    patterns = {
+        "API_Key": re.compile(r'(?i)(api[_-]?key|access[_-]?key|client[_-]?id)["\']?\s*[:=]\s*["\']([a-zA-Z0-9_\-]{12,})["\']'),
+        "Secret/Token": re.compile(r'(?i)(secret|auth[_-]?token|bearer|access[_-]?token|signature)["\']?\s*[:=]\s*["\']([a-zA-Z0-9_\-\.\/]{16,})["\']'),
+        "Firebase/DB": re.compile(r'(?i)(firebase|db[_-]?password|connection[_-]?string)["\']?\s*[:=]\s*["\']([a-zA-Z0-9_\-\@\:\/\.]{10,})["\']')
+    }
+
+    secrets_found = []
+    headers = build_headers({"Accept": "*/*", "Sec-Fetch-Dest": "script"})
+
+    for js_path in js_files:
+        full_url = f"{environment}{js_path}"
+        try:
+            response = http_get(full_url, headers)
+            if response and response.status_code == 200:
+                content = response.text
+                for label, pattern in patterns.items():
+                    for match in pattern.finditer(content):
+                        # match.group(0) é a linha toda, match.group(2) é o valor
+                        secrets_found.append({
+                            "file": js_path,
+                            "type": label,
+                            "key": match.group(1),
+                            "evidence": match.group(0).strip(),
+                            "severity": "HIGH"
+                        })
+        except Exception as e:
+            if CONFIG.get("debug_mode", True):
+                print(f"Failed to scan secrets in {js_path}: {e}")
+            continue
+
+    # Remove duplicatas baseadas na evidência
+    unique_findings = {f["evidence"]: f for f in secrets_found}.values()
+    report["secret_scanner"] = list(unique_findings)
+    save_json(report_file, report)
     return True
 
 def get_cloudconnet_version(accesskey: str) -> bool:
@@ -1896,4 +2215,4 @@ def get_cloudconnet_version(accesskey: str) -> bool:
 
 
 if __name__ == '__main__':
-    get_references_health("d3e8e6c3-5ce1-42c7-9fcd-cef56b941053")
+    capture_all_screens_xhr("439553ff-e7d3-45dc-bdab-17a2b0e0524e")

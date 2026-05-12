@@ -38,10 +38,15 @@ def get_struct_report_file() -> dict:
         "handshake_properties":[],
         "external_authentication":{},
         "endpoints":[],
+        "runtime_csrf": {},
+        "runtime_endpoints": [],
+        "native_integration": {},
         "screens_detail":[],
         "appscreensRequests":[],
         "roles":[],
         "interaction_xhr_analysis":[],
-        "vulnerabilities": []
+        "vulnerabilities": [],
+        "custom_js_findings": [],
+        "secret_scanner": []
     }
     return empty_structure

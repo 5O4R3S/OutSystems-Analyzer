@@ -83,6 +83,24 @@
                     </li>
 
                     <li class="nav-item">
+                        <a href="#js-inspector" class="nav-link text-muted d-flex align-items-center sidebar-link">
+                            <i class="bi bi-filetype-js me-2"></i> JS Inspector
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#secret-scanner" class="nav-link text-muted d-flex align-items-center sidebar-link">
+                            <i class="bi bi-incognito me-2"></i> Secret Scanner
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#runtime-analysis" class="nav-link text-muted d-flex align-items-center sidebar-link">
+                            <i class="bi bi-cpu-fill me-2"></i> Runtime
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
                         <a href="#roleskey" class="nav-link text-muted d-flex align-items-center sidebar-link">
                             <i class="bi bi-key me-2"></i> Roles & Keys
                         </a>
@@ -991,6 +1009,142 @@
                         <p class="mt-3">No references found.</p>
                     </div>
                     {% endif %}
+                </section>
+
+                <section id="js-inspector" class="mb-5">
+                    <h4 class="report-section-header">> CUSTOM_JS_INSPECTOR</h4>
+                    {% if report.custom_js_findings %}
+                        <div class="row g-3">
+                            {% for js in report.custom_js_findings %}
+                            <div class="col-12">
+                                <div class="terminal-card {{ 'border-warning' if js.suspicious else '' }}">
+                                    <div class="p-3 d-flex justify-content-between align-items-center border-bottom border-secondary">
+                                        <div>
+                                            <span class="data-label">SCREEN: {{ js.screen }}</span>
+                                            <h6 class="text-white mb-0">{{ js.element_name }}</h6>
+                                        </div>
+                                        {% if js.suspicious %}
+                                            <span class="badge text-bg-warning"><i class="bi bi-exclamation-diamond me-1"></i> SENSITIVE_STRINGS_DETECTED</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="p-0">
+                                        <pre class="bg-black text-success p-3 m-0 small font-monospace overflow-auto" style="max-height: 200px;">{{ js.code_preview }}</pre>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="terminal-card p-4 text-center text-muted italic">
+                            >> NO_CUSTOM_JAVASCRIPT_ELEMENTS_IDENTIFIED
+                        </div>
+                    {% endif %}
+                </section>
+
+                <section id="secret-scanner" class="mb-5">
+                    <h4 class="report-section-header">> DEEP_SECRET_SCANNER</h4>
+                    {% if report.secret_scanner %}
+                        <div class="table-responsive">
+                            <table class="table table-hacker align-middle mb-0 table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Source_File</th>
+                                        <th>Evidence</th>
+                                        <th>Severity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in report.secret_scanner %}
+                                    <tr>
+                                        <td><span class="badge text-bg-info">{{ item.type }}</span></td>
+                                        <td class="small text-muted">{{ item.file.split('/')[-1] }}</td>
+                                        <td>
+                                            <code class="text-success small">{{ item.evidence[:100] }}{% if item.evidence|length > 100 %}...{% endif %}</code>
+                                            <a href="#" class="ai-logic-trigger ms-2"
+                                                data-problem="A sensitive string was found in the code: '{{ item.evidence }}'. This looks like a {{ item.type }}. What is the risk and impact?"
+                                                data-bs-toggle="modal" data-bs-target="#aiAdviceModal">
+                                                <i class="bi bi-stars text-warning"></i>
+                                            </a>
+                                        </td>
+                                        <td><span class="badge badge-status text-danger border-danger">{{ item.severity }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="terminal-card p-4 text-center">
+                            <p class="text-muted mb-0">>> NO_EXPOSED_SECRETS_FOUND_IN_JS_ASSETS</p>
+                        </div>
+                    {% endif %}
+                </section>
+
+                <section id="runtime-analysis" class="mb-5">
+                    <h4 class="report-section-header">> CLIENT_RUNTIME_FORENSICS</h4>
+                    
+                    <div class="row g-3">
+                        <!-- CSRF Section -->
+                        <div class="col-md-6">
+                            <div class="terminal-card h-100">
+                                <div class="p-3 border-bottom border-secondary">
+                                    <span class="data-label">PROTOCOL: CSRF_PROTECTION</span>
+                                </div>
+                                <div class="p-3">
+                                    <p><span class="data-label">Security_Header:</span><br><code class="text-info">{{ report.runtime_csrf.header }}</code></p>
+                                    <p><span class="data-label">Anonymous_Token:</span><br><code class="text-warning small text-break">{{ report.runtime_csrf.anonymous_token }}</code></p>
+                                    <p><span class="data-label">Cookie_Pattern:</span><br><code class="text-success">{{ report.runtime_csrf.cookie_regex }}</code></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Native Section -->
+                        <div class="col-md-6">
+                            <div class="terminal-card h-100 border-{{ 'warning' if report.native_integration.is_hybrid else 'secondary' }}">
+                                <div class="p-3 border-bottom border-secondary">
+                                    <span class="data-label">BRIDGE: NATIVE_INTEGRATION</span>
+                                </div>
+                                <div class="p-3">
+                                    <p><span class="data-label">Hybrid_Status:</span> <span class="badge {{ 'text-bg-warning' if report.native_integration.is_hybrid else 'text-bg-success' }}">{{ 'DETECTED' if report.native_integration.is_hybrid else 'NOT_FOUND' }}</span></p>
+                                    <p><span class="data-label">Detection_Clues:</span><br>
+                                        {% for clue in report.native_integration.clues %}
+                                            <span class="badge badge-status small mb-1">{{ clue }}</span>
+                                        {% else %}
+                                            <span class="text-muted small">None</span>
+                                        {% endfor %}
+                                    </p>
+                                    <p class="small italic text-muted mt-2">// {{ report.native_integration.risk }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Internal Endpoints Section -->
+                        <div class="col-12">
+                            <div class="terminal-card">
+                                <div class="p-3 border-bottom border-secondary d-flex justify-content-between">
+                                    <span class="data-label">API_SURFACE: INTERNAL_PLATFORM_ENDPOINTS</span>
+                                    <span class="badge badge-status">{{ report.runtime_endpoints|length }} DETECTED</span>
+                                </div>
+                                <div class="p-3" style="max-height: 250px; overflow-y: auto;">
+                                    <div class="row">
+                                        {% for endpoint in report.runtime_endpoints %}
+                                        <div class="col-md-6 mb-1">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-chevron-right text-success me-2 small"></i>
+                                                <code class="text-white-50 small">{{ endpoint }}</code>
+                                                <a href="#" class="ai-logic-trigger ms-2" 
+                                                   data-problem="Found internal platform endpoint: {{ endpoint }}. Is this a sensitive service center or platform API?"
+                                                   data-bs-toggle="modal" data-bs-target="#aiAdviceModal">
+                                                    <i class="bi bi-stars text-warning small"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 <section id="roleskey" class="mb-5">

@@ -180,6 +180,27 @@ def scanningStream():
         yield "data: Validating CKEditor CVE-2022-24728...\n\n"
         functions.check_ckeditor_vulnerability(accesskey)
 
+        yield "data: Testing CKEditor Unrestricted File Upload...\n\n"
+        functions.check_ckeditor_upload_vulnerability(accesskey)
+
+        yield "data: Validating Froala Editor CVE-2023-41592...\n\n"
+        functions.check_froala_vulnerability(accesskey)
+
+        yield "data: Validating PDFTron vulnerabilities...\n\n"
+        functions.check_pdftron_vulnerability(accesskey)
+
+        if not config.get("quick_mode", False):
+            yield "data: Performing deep secret scan on all JS files (it may take time)...\n\n"
+            functions.extract_secrets_from_js(accesskey)
+        else:
+            yield "data: Skipping Deep Secret Scan [QUICK MODE ENABLED]\n\n"
+
+        yield "data: Inspecting Custom JavaScript Blocks (Option 2)...\n\n"
+        functions.extract_custom_js_blocks(accesskey)
+
+        yield "data: Analyzing Client Runtime (CSRF, Native, Internal APIs)...\n\n"
+        functions.analyze_outsystems_runtime(accesskey)
+
         yield "data: Checking Roles...\n\n"
         functions.get_roles(accesskey)
 
