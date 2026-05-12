@@ -3,6 +3,9 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+# Set working directory to the script's location
+cd "$(dirname "$0")"
+
 echo "------------------------------------------"
 echo "  OutSystems Analyzer - Setup Assistant   "
 echo "------------------------------------------"

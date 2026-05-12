@@ -6,22 +6,28 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-PORT=5000
+# Set working directory to the script's location
+cd "$(dirname "$0")"
+
+PORT=${PORT:-5000}
 
 echo -e "${GREEN}------------------------------------------${NC}"
 echo -e "${GREEN}     Starting OutSystems Analyzer...      ${NC}"
 echo -e "${GREEN}------------------------------------------${NC}"
 
 # Check if port is already in use
-# Redirecting stderr to /dev/null to keep it clean if lsof is not installed
 PID=$(lsof -t -i:$PORT 2>/dev/null)
 
 if [ -z "$PID" ]; then
     echo -e "[*] Port $PORT is free."
 else
     echo -e "${YELLOW}[!] Port $PORT is in use by PID: $PID. Killing process...${NC}"
-    kill -9 $PID
-    sleep 1 
+    kill -15 $PID 2>/dev/null
+    sleep 2
+    # Force kill if still running
+    if kill -0 $PID 2>/dev/null; then
+        kill -9 $PID 2>/dev/null
+    fi
     echo -e "${GREEN}[+] Port $PORT is now available.${NC}"
 fi
 

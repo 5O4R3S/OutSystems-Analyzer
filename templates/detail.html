@@ -469,9 +469,11 @@
                                         <div class="col-6 col-md-4 col-lg-3">
                                             <div class="history-entry h-100 flex-column align-items-start p-3 position-relative {% if resource.suspicious %}border-warning{% endif %}" style="border-left-width: 3px;">
                                                 <div class="d-flex justify-content-between w-100 align-items-start mb-3">
-                                                    <div class="resource-icon-wrapper">
-                                                    {{ resource_icon(resource.path) }}
-                                                </div>
+                                                    <a href="https://{{ report.target.subdomain }}{{ '.' if report.target.subdomain else '' }}{{ report.target.domain }}{{ resource.path }}" target="_blank" class="text-decoration-none">
+                                                        <div class="resource-icon-wrapper">
+                                                            {{ resource_icon(resource.path) }}
+                                                        </div>
+                                                    </a>
                                                     {% if resource.suspicious %}
                                                     <a href="#" class="ai-logic-trigger"
                                                         data-problem="Public access detected: {{ resource.path }}. Evaluate risk level."
@@ -486,7 +488,11 @@
                                                     <div class="text-white fw-bold small text-break mb-2">{{ resource.path.split('/')[-1] }}</div>
                                                     
                                                     <span class="data-label d-block mb-1">VIRTUAL_PATH</span>
-                                                    <div class="text-muted" style="font-size: 0.65rem; word-break: break-all; font-family: var(--font-mono);">{{ resource.path }}</div>
+                                                    <div class="text-muted" style="font-size: 0.65rem; word-break: break-all; font-family: var(--font-mono);">
+                                                        <a href="https://{{ report.target.subdomain }}{{ '.' if report.target.subdomain else '' }}{{ report.target.domain }}{{ resource.path }}" target="_blank" class="text-muted text-decoration-none hover-white">
+                                                            {{ resource.path }}
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
