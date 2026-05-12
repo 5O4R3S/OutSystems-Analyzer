@@ -54,6 +54,7 @@
                         <form method="POST" action="{{ url_for('verifyTarget') }}">
                             <div class="terminal-input-group mb-3">
                                 <span class="opacity-75">target:~$</span>
+                                <input type="hidden" id="parentAccessKey" name="parentAccessKey">
                                 <input type="url" class="form-control form-control-hacker" 
                                     placeholder="https://domain.com/App"
                                     id="urlToScan" name="urlToScan" required>
@@ -278,12 +279,15 @@
             document.addEventListener("DOMContentLoaded", function() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const targetUrl = urlParams.get('target');
+                const parentKey = urlParams.get('parent');
                 if (targetUrl) {
                     const input = document.getElementById('urlToScan');
+                    const parentInput = document.getElementById('parentAccessKey');
                     const button = document.getElementById('button-addon2');
 
                     if (input && button) {
                         input.value = targetUrl;
+                        if(parentKey) parentInput.value = parentKey;
 
                         setTimeout(() => {
                             button.click();

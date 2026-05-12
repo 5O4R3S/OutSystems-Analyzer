@@ -35,6 +35,12 @@
                     </li>
 
                     <li class="nav-item">
+                        <a href="#security-vigilance" class="nav-link text-muted d-flex align-items-center sidebar-link">
+                            <i class="bi bi-shield-lock me-2"></i> Headers
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
                         <a href="#handshake" class="nav-link text-muted d-flex align-items-center sidebar-link">
                             <i class="bi bi-arrow-down-up me-2"></i> Handshakes
                         </a>
@@ -58,6 +64,12 @@
                         </a>
                     </li>
 
+                                        <li class="nav-item">
+                        <a href="#vulnerabilities" class="nav-link text-muted d-flex align-items-center sidebar-link">
+                            <i class="bi bi-shield-exclamation me-2"></i> Vulnerabilities
+                        </a>
+                    </li>
+
                     <li class="nav-item">
                         <a href="#platformcapabilities" class="nav-link text-muted d-flex align-items-center sidebar-link">
                             <i class="bi bi-gear me-2"></i> Platform Capabilities
@@ -75,6 +87,7 @@
                             <i class="bi bi-key me-2"></i> Roles & Keys
                         </a>
                     </li>
+
                 </ul>
 
                 <a href="{{ url_for('homePage') }}" class="btn btn-hacker-danger mt-auto">
@@ -157,6 +170,38 @@
                         </div>
                     </div>
                 </section>
+
+                <section id="security-vigilance" class="mb-5">
+                    <h4 class="report-section-header">> SECURITY_VIGILANCE_PROTOCOL</h4>
+                    <div class="terminal-card p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hacker mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Security_Header</th>
+                                        <th>Detected_Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if report.security_headers %}
+                                    {% for header, value in report.security_headers.items() %}
+                                    <tr>
+                                        <td class="text-info">{{ header }}</td>
+                                        <td class="font-monospace small">{{ value }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted py-3">NO_SECURITY_HEADERS_DETECTED</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                
 
                 <section id="handshake" class="mb-5">
                     <h4 class="report-section-header">> HANDSHAKE_PROPERTIES</h4>
@@ -747,6 +792,40 @@
 
                 </section>
 
+                <section id="vulnerabilities" class="mb-5">
+                    <h4 class="report-section-header">> VULNERABILITY_ASSESSMENT</h4>
+                    {% if report.vulnerabilities and report.vulnerabilities|length > 0 %}
+                        {% for vuln in report.vulnerabilities %}
+                        <div class="terminal-card border-{{ 'danger' if vuln.vulnerable else 'secondary' }} mb-3">
+                            <div class="p-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <span class="badge {{ 'text-bg-danger' if vuln.vulnerable else 'text-bg-success' }} mb-2">
+                                            {{ 'VULNERABLE' if vuln.vulnerable else 'SECURE_VERSION' }}
+                                        </span>
+                                        <h5 class="text-white mb-1">{{ vuln.component }} (v{{ vuln.version }})</h5>
+                                        <p class="text-muted small mb-0">{{ vuln.cve }} | SEVERITY: {{ vuln.severity }}</p>
+                                    </div>
+                                    {% if vuln.vulnerable %}
+                                    <a href="#" class="ai-logic-trigger"
+                                        data-problem="The component {{ vuln.component }} version {{ vuln.version }} is vulnerable to {{ vuln.cve }}. What are the risks and how to fix it?"
+                                        data-bs-toggle="modal" data-bs-target="#aiAdviceModal">
+                                        <i class="bi bi-stars text-warning fs-4"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                <hr class="border-secondary opacity-25">
+                                <p class="font-monospace small mb-0">{{ vuln.summary }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="terminal-card p-4 text-center">
+                            <p class="text-muted mb-0">>> NO_KNOWN_CVE_DETECTED_IN_THIRD_PARTY_LIBS</p>
+                        </div>
+                    {% endif %}
+                </section>
+
                 <section id="platformcapabilities" class="mb-5">
                     <h4 class="report-section-header">> PLATFORM_CAPABILITIES</h4>
 
@@ -836,7 +915,7 @@
                                             {% else %}
                                                 <span class="badge badge-status text-warning border-warning me-2">PENDING</span>
                                             {% endif %}
-                                            <a href="/?target={{ report.target.full_url.rsplit('/', 1)[0] }}/{{ var.modulename }}" 
+                                            <a href="/?target={{ report.target.full_url.rsplit('/', 1)[0] }}/{{ var.modulename }}&parent={{ accesskey }}" 
                                             class="text-decoration-none badge badge-status {{ 'badge-active' if var.analysis_id else 'text-warning border-warning' }}" target="_blank">
                                                 <i class="bi bi-terminal me-1"></i> {{ "RE_SCAN" if var.analysis_id else "INIT_SCAN" }}
                                             </a>
@@ -844,7 +923,15 @@
                                             <span class="text-muted small">ACCESS_RESTRICTED</span>
                                         {% endif %}
                                     </td>
-                                    <td>{{ var.analysis_id }}</td>
+                                    <td>
+                                        {% if var.analysis_id %}
+                                        <a href="/detail?accesskey={{ var.analysis_id }}" target="_blank" class="text-info text-decoration-none font-monospace">
+                                            <i class="bi bi-file-earmark-text me-1"></i> {{ var.analysis_id[:13] }}
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted opacity-50">---</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -862,7 +949,7 @@
                                             {% else %}
                                                 <span class="badge badge-status text-warning border-warning me-2">PENDING</span>
                                             {% endif %}
-                                            <a href="/?target={{ report.target.full_url.rsplit('/', 1)[0] }}/{{ var.modulename }}" 
+                                            <a href="/?target={{ report.target.full_url.rsplit('/', 1)[0] }}/{{ var.modulename }}&parent={{ accesskey }}" 
                                             class="text-decoration-none badge badge-status {{ 'badge-active' if var.analysis_id else 'text-warning border-warning' }}" target="_blank">
                                                 <i class="bi bi-terminal me-1"></i> {{ "RE_SCAN" if var.analysis_id else "INIT_SCAN" }}
                                             </a>
@@ -870,7 +957,15 @@
                                             <span class="text-muted small">ACCESS_RESTRICTED</span>
                                         {% endif %}
                                     </td>
-                                    <td>{{ var.analysis_id }}</td>
+                                    <td>
+                                        {% if var.analysis_id %}
+                                        <a href="/detail?accesskey={{ var.analysis_id }}" target="_blank" class="text-info text-decoration-none font-monospace">
+                                            <i class="bi bi-file-earmark-text me-1"></i> {{ var.analysis_id[:13] }}
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted opacity-50">---</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -917,7 +1012,7 @@
                                 {% for var in report.roles[:3] %}
                                 <tr>
                                     <td>{{ var.name }}</td>
-                                    <td><span class="badge text-bg-warning">{{
+                                    <td><span class="badge badge-status text-warning border-warning me-2">{{
                                             var.rolekey }}</span></td>
                                 </tr>
                                 {% endfor %}

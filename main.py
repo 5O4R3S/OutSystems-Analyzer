@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, stream_with_context, Response, jsonify
-from database import init_db, get_scanhistory_items, delete_scanhistory_item, clear_all_scanhistory, ai_clear_cache
-from queries import db_insert_targetinformations
+from database import init_db, get_scanhistory_items, delete_scanhistory_item, clear_all_scanhistory, ai_clear_cache, db_insert_targetinformations
 from handleurl import resolve_url
 from dotenv import load_dotenv, set_key
 import os
@@ -75,8 +74,9 @@ def verifyTarget():
     modulename = urlSplited.get('modulename', '')
 
     accesskey = str(uuid.uuid4())
+    parent_key = request.form.get('parentAccessKey')
 
-    create_pre_files = functions.get_moduleinfo_from_target(subdomain, domain, modulename, accesskey)
+    create_pre_files = functions.get_moduleinfo_from_target(subdomain, domain, modulename, accesskey, parent_key)
 
     if create_pre_files == "odc_environment":
         flash("Cannot scan ODC environments.", "error")
@@ -132,6 +132,9 @@ def scanningStream():
         yield "data: Looking for ReactView version...\n\n"
         functions.get_react_version(accesskey)
 
+        yield "data: Checking Security Headers...\n\n"
+        functions.get_security_info(accesskey)
+
         yield "data: Looking for Clients Variables...\n\n"
         functions.get_client_variables(accesskey)
 
@@ -173,6 +176,9 @@ def scanningStream():
             
         yield "data: Checking References Health...\n\n"
         functions.get_references_health(accesskey)
+
+        yield "data: Validating CKEditor CVE-2022-24728...\n\n"
+        functions.check_ckeditor_vulnerability(accesskey)
 
         yield "data: Checking Roles...\n\n"
         functions.get_roles(accesskey)

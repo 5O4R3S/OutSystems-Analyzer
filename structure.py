@@ -1,10 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 def get_struct_report_file() -> dict:
     empty_structure = {
         "metadata": {
         "analysis_id": "",
-        "started_at": datetime.utcnow().isoformat(),
+        "started_at": datetime.now(timezone.utc).isoformat(),
         "finished_at": None,
         "status": "pending"
         },
@@ -13,6 +13,7 @@ def get_struct_report_file() -> dict:
         "subdomain": "",
         "modulename": "",
         "full_url": "",
+        "module_version_hash": "",
         "real_dns":"",
         "applicationName": "",
         "applicationKey": "",
@@ -24,6 +25,7 @@ def get_struct_report_file() -> dict:
         "react_version":"",
         "cloudconnect_version":""
         },
+        "security_headers": {},
         "appscreens":[],
         "dependencies":[],
         "resources":[],
@@ -39,6 +41,7 @@ def get_struct_report_file() -> dict:
         "screens_detail":[],
         "appscreensRequests":[],
         "roles":[],
-        "interaction_xhr_analysis":[]
+        "interaction_xhr_analysis":[],
+        "vulnerabilities": []
     }
     return empty_structure

@@ -4,7 +4,7 @@ import re
 import json
 import os
 import js2py
-from datetime import datetime
+from datetime import datetime, timezone
 import socket
 from structure import get_struct_report_file
 import xml.etree.ElementTree as ET
@@ -147,11 +147,25 @@ def finish_scan(accesskey: str) -> bool:
         print(f"Relatório não encontrado: {report_file}")
         return False
     
+    # Se este scan tem um pai, vamos atualizar o pai
+    parent_id = report.get("metadata", {}).get("parent_id")
+    if parent_id:
+        _, parent_report_file = get_report_paths(parent_id)
+        parent_report = load_json(parent_report_file)
+        if parent_report:
+            module_name = report["target"].get("modulename")
+            # Procura o módulo na lista de referências do pai e atualiza o ID
+            for ref in parent_report.get("references_health", []):
+                if ref["modulename"] == module_name:
+                    ref["analysis_id"] = accesskey
+                    break
+            save_json(parent_report_file, parent_report)
+
     if "metadata" not in report:
         report["metadata"] = {}
 
     report["metadata"]["status"] = "completed"
-    report["metadata"]["finished_at"] = datetime.utcnow().isoformat()
+    report["metadata"]["finished_at"] = datetime.now(timezone.utc).isoformat()
 
     save_json(report_file, report)
     return True
@@ -228,98 +242,138 @@ def create_empty_report_file(folder: str,accesskey: str, subdomain: str, domain:
         print(f"Error creating the report's JSON file: {e}")
         return None
 
-def http_get(url, headers=None):
+def _do_request(method, url, **kwargs):
     attempts = CONFIG.get("max_attempts", 3)
     timeout = CONFIG.get("request_timeout", 60)
-    
     urls_to_try = [url, toggle_www(url)]
     
     for current_url in urls_to_try:
         if CONFIG.get("debug_mode", True):
-            print(f"--- Testing Host: {urlparse(current_url).netloc} ---")
-            
+            print(f"--- [{method}] Target: {urlparse(current_url).netloc} ---")
         for attempt in range(1, attempts + 1):
             try:
-                response = requests.get(
+                response = requests.request(
+                    method,
                     current_url,
-                    headers=headers,
                     verify=False,
-                    timeout=timeout
+                    timeout=timeout,
+                    **kwargs
                 )
-
                 response.raise_for_status()
-                
                 if CONFIG.get("debug_mode", True):
-                    print(f"Success in URL: {current_url}")
+                    print(f"Request successful: {current_url}")
                 return response
-
             except requests.exceptions.ConnectionError as e:
                 if CONFIG.get("debug_mode", True):
-                    print(f"Connection/DNS erros on {current_url} (attempt {attempt}/{attempts})")
-                
+                    print(f"Network error on {current_url} (Attempt {attempt}/{attempts})")
                 if "NameResolutionError" in str(e) or "Failed to resolve" in str(e):
-                    if CONFIG.get("debug_mode", True):
-                        print("Resolution failure detected, switching hosts...")
-                    break 
-                
-                if attempt == attempts:
                     break
-
+                if attempt == attempts: break
             except requests.exceptions.HTTPError as e:
-                print(f"HTTP error: {current_url}: {e}")
-                if attempt == attempts:
-                    break
-                    
+                if CONFIG.get("debug_mode", True):
+                    print(f"HTTP Error {e.response.status_code}: {current_url}")
+                if attempt == attempts: break
+            except Exception:
+                if attempt == attempts: break
     return None
+
+def http_get(url, headers=None):
+    return _do_request("GET", url, headers=headers)
 
 def http_post(url, data=None, json=None, headers=None):
-    attempts = CONFIG.get("max_attempts", 3)
-    timeout = CONFIG.get("request_timeout", 60)
+    return _do_request("POST", url, data=data, json=json, headers=headers)
+
+def check_ckeditor_vulnerability(accesskey: str) -> bool:
+    if CONFIG.get("debug_mode", True):
+        print(f"Checking for CKEditor vulnerabilities...")
     
-    urls_to_try = [url, toggle_www(url)]
+    _, report_file = get_report_paths(accesskey)
+    report = load_json(report_file)
+    if not report: return False
+
+    sub = report["target"].get("subdomain", "")
+    dom = report["target"].get("domain", "")
+    sub_part = f"{sub}." if sub else ""
     
-    for current_url in urls_to_try:
-        if CONFIG.get("debug_mode", True):
-            print(f"--- Trying to host: {urlparse(current_url).netloc} ---")
+    # URL do componente CKEditor Reactive no OutSystems
+    url = f"https://{sub_part}{dom}/CKEditorReactive/ckeditor/ckeditor.js"
+    
+    response = http_get(url)
+    if response and response.status_code == 200:
+        # Regex para buscar version:"4.x.x" ou version:'4.x.x'
+        match = re.search(r'version\s*:\s*["\']([\d\.]+)["\']', response.text)
+        if match:
+            version_str = match.group(1)
             
-        for attempt in range(1, attempts + 1):
+            # Lógica de comparação de versão (4.14.0)
             try:
-                response = requests.post(
-                    current_url,
-                    data=data,
-                    json=json, 
-                    headers=headers,
-                    verify=False,
-                    timeout=timeout
-                )
+                version_tuple = tuple(map(int, version_str.split('.')))
+                vulnerable_threshold = (4, 14, 0)
                 
-                response.raise_for_status()
+                is_vulnerable = version_tuple <= vulnerable_threshold
                 
-                if CONFIG.get("debug_mode", True):
-                    print(f"Success in URL: {current_url}")
-                return response
+                vuln_entry = {
+                    "component": "CKEditor Reactive",
+                    "version": version_str,
+                    "cve": "CVE-2022-24728",
+                    "severity": "HIGH" if is_vulnerable else "INFO",
+                    "vulnerable": is_vulnerable,
+                    "summary": "Versions <= 4.14.0 are susceptible to XSS via specially crafted HTML." if is_vulnerable else "Version is above known high-risk CVE thresholds."
+                }
+                
+                report["vulnerabilities"].append(vuln_entry)
+                save_json(report_file, report)
+                return True
+            except Exception as e:
+                print(f"Error parsing CKEditor version: {e}")
+                
+    return False
 
-            except requests.exceptions.ConnectionError as e:
-                if CONFIG.get("debug_mode", True):
-                    print(f"Connection/DNS error on {current_url} (Attempt {attempt}/{attempts})")
-                
-                # Se o DNS falhou (NameResolutionError), pula para a próxima URL imediatamente
-                if "NameResolutionError" in str(e) or "Failed to resolve" in str(e):
-                    if CONFIG.get("debug_mode", True):
-                        print("Resolution failure detected, switching hosts...")
-                    break 
-                
-                if attempt == attempts:
-                    break
+def analyze_security_headers(headers: dict):
+    relevant = [
+        "Content-Security-Policy",
+        "Strict-Transport-Security",
+        "X-Frame-Options",
+        "X-Content-Type-Options",
+        "X-XSS-Protection",
+        "Referrer-Policy",
+        "Server",
+        "X-Powered-By"
+    ]
+    # Extrai os headers garantindo a verificação de existência
+    # O objeto headers do 'requests' já é case-insensitive, mas aqui 
+    # garantimos que o nome do header no relatório seja padronizado.
+    return {h: headers.get(h, "MISSING_OR_NOT_DETECTED") for h in relevant}
 
-            except requests.exceptions.HTTPError as e:
-                print(f"HTTP error: {e}")
-                if attempt == attempts:
-                    break
-                    
-    return None
+def get_security_info(accesskey: str) -> bool:
+    if CONFIG.get("debug_mode", True):
+        print(f"Analyzing security headers and module version...")
+    _, report_file = get_report_paths(accesskey)
+    report = load_json(report_file)
+    if report is None:
+        return False
 
-def get_moduleinfo_from_target(subdomain: str, domain: str, modulename: str, accesskey: str) -> bool | str:
+    subdomain = report["target"].get("subdomain", "")
+    domain = report["target"].get("domain", "")
+    modulename = report["target"].get("modulename", "")
+
+    url = f"{build_url_application(subdomain, domain, modulename)}moduleservices/moduleinfo"
+    headers = build_headers({"Content-Type": "application/json"})
+    
+    response = http_get(url, headers)
+    if response and response.status_code == 200:
+        try:
+            data = response.json()
+            version_info = data.get("versionInfo", {})
+            report["target"]["module_version_hash"] = version_info.get("moduleVersion", "N/A")
+            report["security_headers"] = analyze_security_headers(response.headers)
+            save_json(report_file, report)
+            return True
+        except Exception as e:
+            print(f"Error parsing moduleinfo for security: {e}")
+    return False
+
+def get_moduleinfo_from_target(subdomain: str, domain: str, modulename: str, accesskey: str, parent_key: str = None) -> bool | str:
     # 1. Definimos os domínios para tentar (Original e Alternativo com/sem www)
     domains_to_try = [domain]
     if domain.startswith("www."):
@@ -381,6 +435,13 @@ def get_moduleinfo_from_target(subdomain: str, domain: str, modulename: str, acc
         # Usamos o final_domain que realmente funcionou para o relatório
         report_path = create_empty_report_file(default_folder, accesskey, subdomain, final_domain, modulename)
         
+        # Carregamos o relatório recém-criado para atualizar com metadados técnicos
+        report = load_json(os.path.join(default_folder, f"{accesskey}.json"))
+        if report:
+            if parent_key:
+                report["metadata"]["parent_id"] = parent_key
+            save_json(os.path.join(default_folder, f"{accesskey}.json"), report)
+
         return True if report_path else False
     
     except Exception as e:
@@ -724,17 +785,22 @@ def get_references_health(accesskey: str) -> bool:
     references_with_scan = []
     for ref in references:
         allow_to_scan = False
-        
-        for current_domain in domains_to_try:
-            url_moduleinfo = f"https://{subdomain_part}{current_domain}/{ref}/moduleservices/moduleinfo"
-            try:
-                headers_json = build_headers({"Content-Type": "application/json"})
-                res = http_get(url_moduleinfo, headers_json)
-                if res and res.status_code == 200:
-                    allow_to_scan = True
-                    break
-            except: continue
-            
+        # http_get já lida internamente com as tentativas de www/non-www
+        url_moduleinfo = f"https://{subdomain_part}{domain}/{ref}/moduleservices/moduleinfo"
+        try:
+            headers_json = build_headers({"Content-Type": "application/json"})
+            res = http_get(url_moduleinfo, headers_json)
+            if res and res.status_code == 200:
+                # Validamos se o conteúdo é o JSON esperado para evitar falsos positivos
+                try:
+                    data = res.json()
+                    if isinstance(data, dict) and "manifest" in data:
+                        allow_to_scan = True
+                except (ValueError, json.JSONDecodeError):
+                    pass
+        except Exception:
+            pass
+
         references_with_scan.append({
             "modulename": ref,
             "allowtoscan": allow_to_scan,
@@ -1830,4 +1896,4 @@ def get_cloudconnet_version(accesskey: str) -> bool:
 
 
 if __name__ == '__main__':
-    get_references_health("cdc1780d-f118-4327-9bb6-ed0b2021bf7f")
+    get_references_health("d3e8e6c3-5ce1-42c7-9fcd-cef56b941053")
