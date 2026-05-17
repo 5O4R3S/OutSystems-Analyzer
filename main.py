@@ -8,6 +8,8 @@ import functions
 from datetime import datetime
 import shutil
 import generative
+import io
+from xhtml2pdf import pisa
 
 load_dotenv(override=True)
 init_db()
@@ -19,7 +21,7 @@ app.secret_key = os.urandom(24).hex()
 def inject_config():
     return {"config": functions.load_config()}
 
-@app.template_filter('datetimeformat')
+@app.template_filter('datetimeformat') # Modificado para aceitar um argumento de formato
 def datetimeformat(value, format="%d/%m/%Y %H:%M:%S"):
     dt = datetime.fromisoformat(value)
     return dt.strftime(format)
@@ -132,6 +134,9 @@ def scanningStream():
         yield "data: Looking for ReactView version...\n\n"
         functions.get_react_version(accesskey)
 
+        yield "data: Checking OutSystems Global Version...\n\n"
+        functions.get_os_global_version(accesskey)
+
         yield "data: Checking Security Headers...\n\n"
         functions.get_security_info(accesskey)
 
@@ -189,6 +194,15 @@ def scanningStream():
         yield "data: Validating PDFTron vulnerabilities...\n\n"
         functions.check_pdftron_vulnerability(accesskey)
 
+        yield "data: Checking Clickjacking vulnerability...\n\n"
+        functions.check_clickjacking_vulnerability(accesskey)
+
+        yield "data: Checking PRSSI/RPO vulnerability...\n\n"
+        functions.check_rpo_vulnerability(accesskey)
+
+        yield "data: Checking Debugger Headers exposure...\n\n"
+        functions.check_debugger_vulnerability(accesskey)
+
         if not config.get("quick_mode", False):
             yield "data: Performing deep secret scan on all JS files (it may take time)...\n\n"
             functions.extract_secrets_from_js(accesskey)
@@ -229,6 +243,37 @@ def reportDetailPage():
         return redirect(url_for('homePage'))
 
     return render_template('detail.html', accesskey=guid,report=report_full)
+
+@app.route('/export_pdf/<accesskey>')
+def export_pdf(accesskey):
+    data_file, report_file = functions.get_report_paths(accesskey)
+    report = functions.load_json(report_file)
+
+    if not report:
+        flash("Report not found.", "error")
+        return redirect(url_for('homePage'))
+
+    # 1. Renderiza o template HTML com os dados do relatório
+    html_content = render_template('pdf_report.html', report=report)
+    
+    # 2. Prepara o buffer para o PDF
+    buffer = io.BytesIO()
+    
+    # 3. Converte o HTML em PDF usando xhtml2pdf
+    pisa_status = pisa.CreatePDF(html_content, dest=buffer)
+    
+    if pisa_status.err:
+        flash("Error generating PDF from template.", "error")
+        return redirect(url_for('reportDetailPage', accesskey=accesskey))
+
+    buffer.seek(0)
+
+    modulename = report['target'].get('modulename', 'Report')
+    return Response(
+        buffer,
+        mimetype="application/pdf",
+        headers={"Content-Disposition": f"attachment;filename=Report_{modulename}_{accesskey[:8]}.pdf"}
+    )
 
 @app.route('/get_scanhistory_items', methods=['GET'])
 def get_items():

@@ -120,9 +120,11 @@
                 <section id="details" class="mb-5">
                     <h3 class="report-section-header">> REPORT_DETAILS</h3>
                     <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2 mb-4">
-                        <div>
-                            <span class="data-label">Identification_Hash</span>
-                            <p class="fw-bold mb-0">{{ report.metadata.analysis_id }}</p>
+                        <div class="d-flex align-items-center gap-4">
+                            <div>
+                                <span class="data-label">Identification_Hash</span>
+                                <p class="fw-bold mb-0">{{ report.metadata.analysis_id }}</p>
+                            </div>
                         </div>
 
                         <div class="text-end">
@@ -162,6 +164,12 @@
                                         report.platform_info.Serial | default('N/A', True)}} <span
                                             class="badge text-bg-warning">serial</span></span>
                                 </p>
+                                {% if report.target.os_global_version %}
+                                <p>
+                                    <span class="data-label">OS_Global_Loader</span></br>
+                                    <span class="fst-italic">{{ report.target.os_global_version }} <span class="badge text-bg-info">manifest_loader</span></span>
+                                </p>
+                                {% endif %}
                             </div>
                             <div class="col">
                                 <p>
@@ -191,6 +199,61 @@
 
                 <section id="security-vigilance" class="mb-5">
                     <h4 class="report-section-header">> SECURITY_VIGILANCE_PROTOCOL</h4>
+
+                    {# Filtra especificamente a vulnerabilidade de Clickjacking para exibir um destaque contextual #}
+                    {% for vuln in report.vulnerabilities if vuln.cve == "Clickjacking (Missing Anti-Clickjacking Headers)" %}
+                    <div class="alert {{ 'alert-danger' if vuln.vulnerable else 'alert-success' }} bg-transparent border-{{ 'danger' if vuln.vulnerable else 'success' }} text-white mb-3 d-flex justify-content-between align-items-center shadow-sm" style="border-left-width: 4px;">
+                        <div>
+                            <i class="bi {{ 'bi-exclamation-triangle-fill text-danger' if vuln.vulnerable else 'bi-shield-check text-success' }} me-2"></i>
+                            <span class="fw-bold">ANTI_CLICKJACKING:</span> 
+                            <span class="ms-2 small opacity-75">{{ vuln.summary }}</span>
+                        </div>
+                        {% if vuln.vulnerable %}
+                        <a href="#" class="ai-logic-trigger"
+                            data-problem="{{ vuln.summary }} How can I fix this in OutSystems Service Center, lifetime, or using Factory Configuration?"
+                            data-bs-toggle="modal" data-bs-target="#aiAdviceModal">
+                            <i class="bi bi-stars text-warning fs-5"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    {# Filtra especificamente a vulnerabilidade de RPO #}
+                    {% for vuln in report.vulnerabilities if vuln.cve == "PRSSI - Path-Relative Stylesheet Intervention (RPO)" %}
+                    <div class="alert {{ 'alert-danger' if vuln.vulnerable else 'alert-success' }} bg-transparent border-{{ 'danger' if vuln.vulnerable else 'success' }} text-white mb-3 d-flex justify-content-between align-items-center shadow-sm" style="border-left-width: 4px;">
+                        <div>
+                            <i class="bi {{ 'bi-layers-half text-danger' if vuln.vulnerable else 'bi-layers text-success' }} me-2"></i>
+                            <span class="fw-bold">PRSSI_RPO_SHIELD:</span> 
+                            <span class="ms-2 small opacity-75">{{ vuln.summary }}</span>
+                        </div>
+                        {% if vuln.vulnerable %}
+                        <a href="#" class="ai-logic-trigger"
+                            data-problem="A vulnerabilidade RPO (Relative Path Overwrite) foi detectada. Como posso garantir que o OutSystems utilize apenas caminhos root-relative ou absolutos para CSS?"
+                            data-bs-toggle="modal" data-bs-target="#aiAdviceModal">
+                            <i class="bi bi-stars text-warning fs-5"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    {# Filtra especificamente a vulnerabilidade de Debugger Headers #}
+                    {% for vuln in report.vulnerabilities if vuln.cve == "Exposed Debugging Headers (HEADER_KEYS)" %}
+                    <div class="alert {{ 'alert-danger' if vuln.vulnerable else 'alert-success' }} bg-transparent border-{{ 'danger' if vuln.vulnerable else 'success' }} text-white mb-3 d-flex justify-content-between align-items-center shadow-sm" style="border-left-width: 4px;">
+                        <div>
+                            <i class="bi {{ 'bi-bug-fill text-danger' if vuln.vulnerable else 'bi-bug text-success' }} me-2"></i>
+                            <span class="fw-bold">DEBUG_PROTOCOL_EXPOSURE:</span> 
+                            <span class="ms-2 small opacity-75">{{ vuln.summary }}</span>
+                        </div>
+                        {% if vuln.vulnerable %}
+                        <a href="#" class="ai-logic-trigger"
+                            data-problem="{{ vuln.summary }} Como este vazamento de HEADER_KEYS pode ser explorado e como posso garantir que o modo Debug esteja desativado corretamente no OutSystems?"
+                            data-bs-toggle="modal" data-bs-target="#aiAdviceModal">
+                            <i class="bi bi-stars text-warning fs-5"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
                     <div class="terminal-card p-0">
                         <div class="table-responsive">
                             <table class="table table-hacker mb-0">
@@ -1113,8 +1176,16 @@
                                 <div class="p-3">
                                     <p><span class="data-label">Hybrid_Status:</span> <span class="badge {{ 'text-bg-warning' if report.native_integration.is_hybrid else 'text-bg-success' }}">{{ 'DETECTED' if report.native_integration.is_hybrid else 'NOT_FOUND' }}</span></p>
                                     <p><span class="data-label">Detection_Clues:</span><br>
-                                        {% for clue in report.native_integration.clues %}
-                                            <span class="badge badge-status small mb-1">{{ clue }}</span>
+                                        {% for item in report.native_integration.details %}
+                                            <div class="d-flex align-items-center mb-1">
+                                                <span class="badge badge-status small me-2">{{ item.type }}</span>
+                                                <code class="text-white-50 small">{{ item.screen }}</code>
+                                                <a href="#" class="ai-logic-trigger ms-2" 
+                                                   data-problem="Native integration ({{ item.type }}) detected on screen '{{ item.screen }}'. Explain how to test for JS-to-Native bridge vulnerabilities and XSS-to-Native command injection in this context."
+                                                   data-bs-toggle="modal" data-bs-target="#aiAdviceModal">
+                                                    <i class="bi bi-stars text-warning small"></i>
+                                                </a>
+                                            </div>
                                         {% else %}
                                             <span class="text-muted small">None</span>
                                         {% endfor %}

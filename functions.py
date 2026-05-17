@@ -886,10 +886,10 @@ def get_references_health(accesskey: str) -> bool:
     subdomain_part = f"{subdomain}." if subdomain else ""
     
     # --- Busca original do path ---
-    search_pattern = "referencesHealth"
+    search_pattern = f"{modulename}.referencesHealth.js" # Busca pelo padrão específico
     url_versions = report_map.get("manifest", {}).get("urlVersions", {})
     client_health = next(
-        (path for path in url_versions.keys() if search_pattern.lower() in path.lower()),
+        (path for path in url_versions.keys() if path.lower().endswith(search_pattern.lower())), # Verifica se o path termina com o padrão
         None
     )
 
@@ -2049,21 +2049,23 @@ def analyze_outsystems_runtime(accesskey: str) -> bool:
 
     # Native / Hybrid Detection
     pages_dir = os.path.join(os.path.dirname(report_file), "pages_js")
-    clues = []
+    clue_details = []
     if os.path.exists(pages_dir):
         for filename in os.listdir(pages_dir):
             if filename.endswith("_mvc.js"):
                 with open(os.path.join(pages_dir, filename), "r", encoding="utf-8") as f:
                     content = f.read().lower()
-                    if "cordova" in content: clues.append("Cordova")
-                    if "osnative" in content: clues.append("OSNative")
-                    if "outsystemsbinary" in content: clues.append("OSBinary")
+                    screen_name = filename.replace("_mvc.js", "")
+                    if "cordova" in content: clue_details.append({"type": "Cordova", "screen": screen_name})
+                    if "osnative" in content: clue_details.append({"type": "OSNative", "screen": screen_name})
+                    if "outsystemsbinary" in content: clue_details.append({"type": "OSBinary", "screen": screen_name})
     
-    clues = list(set(clues))
+    unique_clues = list(set(item["type"] for item in clue_details))
     report["native_integration"] = {
-        "is_hybrid": len(clues) > 0,
-        "clues": clues,
-        "risk": "Potential JS-to-Native bridge vulnerability if CSRF/XSS is present." if clues else "Pure web runtime."
+        "is_hybrid": len(unique_clues) > 0,
+        "clues": unique_clues,
+        "details": clue_details,
+        "risk": "Potential JS-to-Native bridge vulnerability if CSRF/XSS is present." if unique_clues else "Pure web runtime."
     }
 
     # Internal Endpoints Detection
@@ -2212,7 +2214,176 @@ def get_cloudconnet_version(accesskey: str) -> bool:
     
     return True
 
+def check_clickjacking_vulnerability(accesskey: str) -> bool:
+    if CONFIG.get("debug_mode", True):
+        print(f"Checking for Clickjacking vulnerabilities...")
+
+    _, report_file = get_report_paths(accesskey)
+    report = load_json(report_file)
+    if not report: return False
+
+    headers = report.get("security_headers", {})
+    # Extrai valores e garante tratamento de string para comparação
+    xfo = str(headers.get("X-Frame-Options", "")).upper()
+    csp = str(headers.get("Content-Security-Policy", "")).lower()
+
+    # Verifica a presença de diretivas de proteção conhecidas
+    # X-Frame-Options: DENY ou SAMEORIGIN são os padrões seguros
+    has_xfo = any(val in xfo for val in ["DENY", "SAMEORIGIN", "ALLOW-FROM"])
+    
+    # Content-Security-Policy: frame-ancestors é a alternativa moderna e recomendada
+    has_csp_fa = "frame-ancestors" in csp
+
+    is_vulnerable = not (has_xfo or has_csp_fa)
+
+    vuln_entry = {
+        "component": "Security Headers",
+        "version": "N/A",
+        "cve": "Clickjacking (Missing Anti-Clickjacking Headers)",
+        "severity": "MEDIUM" if is_vulnerable else "INFO",
+        "vulnerable": is_vulnerable,
+        "summary": (
+            "The application lacks 'X-Frame-Options' or 'Content-Security-Policy: frame-ancestors' headers. "
+            "This allows the site to be embedded in iframes, facilitating UI redress attacks."
+            if is_vulnerable else "Protection against Clickjacking is active via security headers."
+        )
+    }
+
+    report["vulnerabilities"].append(vuln_entry)
+    save_json(report_file, report)
+    return True
+
+def check_rpo_vulnerability(accesskey: str) -> bool:
+    if CONFIG.get("debug_mode", True):
+        print(f"Checking for PRSSI/RPO vulnerabilities...")
+
+    _, report_file = get_report_paths(accesskey)
+    report = load_json(report_file)
+    if not report: return False
+
+    sub = report["target"].get("subdomain", "")
+    dom = report["target"].get("domain", "")
+    mod = report["target"].get("modulename", "")
+    sub_part = f"{sub}." if sub else ""
+    
+    # Test URL: Injetamos um path falso para verificar se o servidor aceita path confusion
+    # Exemplo: https://env/Module/security_test/..%2f
+    base_url = f"https://{sub_part}{dom}/{mod}/"
+    test_url = f"{base_url}security_test/..%2f"
+
+    is_vulnerable = False
+    reason = "Server handles path traversal correctly or does not use relative CSS paths."
+
+    try:
+        response = http_get(test_url)
+        if response and response.status_code == 200:
+            content = response.text.lower()
+            
+            # Regex para encontrar links CSS relativos:
+            # Ignora caminhos que começam com "/" (root-relative) ou "http" (absolute)
+            relative_css_pattern = r'<link[^>]+rel=["\']stylesheet["\'][^>]+href=["\'](?!/|https?://)([^"\']+\.css)["\']'
+            matches = re.findall(relative_css_pattern, content)
+
+            if matches:
+                is_vulnerable = True
+                reason = f"Path confusion detected. The server loaded the module via a traversed path, and {len(matches)} relative CSS link(s) were found (e.g., '{matches[0]}')."
+    except Exception as e:
+        if CONFIG.get("debug_mode", True):
+            print(f"Error during RPO test: {e}")
+
+    vuln_entry = {
+        "component": "Web Server / Routing",
+        "version": "N/A",
+        "cve": "PRSSI - Path-Relative Stylesheet Intervention (RPO)",
+        "severity": "LOW" if is_vulnerable else "INFO",
+        "vulnerable": is_vulnerable,
+        "summary": reason if is_vulnerable else "No relative CSS links found or server handles path traversal correctly."
+    }
+
+    report["vulnerabilities"].append(vuln_entry)
+    save_json(report_file, report)
+    return True
+
+def get_os_global_version(accesskey: str) -> bool:
+    if CONFIG.get("debug_mode", True):
+        print(f"Checking for OutSystems Global Version...")
+
+    _, report_file = get_report_paths(accesskey)
+    report = load_json(report_file)
+    if report is None:
+        return False
+
+    subdomain = report["target"].get("subdomain", "")
+    domain = report["target"].get("domain", "")
+    modulename = report["target"].get("modulename", "")
+    
+    subdomain_part = f"{subdomain}." if subdomain else ""
+    # URL para o carregador de manifesto global
+    url = f"https://{subdomain_part}{domain}/{modulename}/scripts/OutSystemsManifestLoader.js"
+
+    headers = build_headers({"Accept": "*/*", "Sec-Fetch-Dest": "script"})
+    
+    response = http_get(url, headers)
+    if response and response.status_code == 200:
+        # Busca pelo padrão Version="X.Y.Z"
+        match = re.search(r'Version\s*=\s*["\']([^"\']+)["\']', response.text)
+        if match:
+            version = match.group(1)
+            report["target"]["os_global_version"] = version
+            save_json(report_file, report)
+            
+            if CONFIG.get("debug_mode", True):
+                print(f"OutSystems Global Version detected: {version}")
+            return True
+            
+    return False
+
+def check_debugger_vulnerability(accesskey: str) -> bool:
+    if CONFIG.get("debug_mode", True):
+        print(f"Checking for Debugger Headers exposure (HEADER_KEYS)...")
+
+    _, report_file = get_report_paths(accesskey)
+    report = load_json(report_file)
+    if not report: return False
+
+    sub = report["target"].get("subdomain", "")
+    dom = report["target"].get("domain", "")
+    mod = report["target"].get("modulename", "")
+    sub_part = f"{sub}." if sub else ""
+    
+    # URL para o arquivo de script do Debugger do módulo
+    url = f"https://{sub_part}{dom}/{mod}/scripts/Debugger.js"
+
+    is_vulnerable = False
+    evidence = ""
+
+    response = http_get(url)
+    if response and response.status_code == 200:
+        content = response.text
+        # Busca pelo bloco de mapeamento HEADER_KEYS
+        match = re.search(r'var\s+HEADER_KEYS\s*=\s*\{([\s\S]*?)\};', content)
+        if match:
+            is_vulnerable = True
+            evidence = match.group(0).replace('\n', ' ').strip()
+
+    vuln_entry = {
+        "component": "OutSystems Debugger Client",
+        "version": "N/A",
+        "cve": "Exposed Debugging Headers (HEADER_KEYS)",
+        "severity": "MEDIUM" if is_vulnerable else "INFO",
+        "vulnerable": is_vulnerable,
+        "summary": (
+            f"The file 'Debugger.js' is publicly accessible and exposes the internal header mapping: {evidence}. "
+            "Knowledge of these headers (e.g., ccid, dbg-stop) allows an attacker to attempt session hijacking or DoS by interfering with the server-side execution context."
+            if is_vulnerable else "No sensitive Debugger header mappings found."
+        )
+    }
+
+    report["vulnerabilities"].append(vuln_entry)
+    save_json(report_file, report)
+    return True
+
 
 
 if __name__ == '__main__':
-    capture_all_screens_xhr("439553ff-e7d3-45dc-bdab-17a2b0e0524e")
+    check_debugger_vulnerability("ddcc9eb2-9fdf-4a5e-804e-7f762e6e0b20")

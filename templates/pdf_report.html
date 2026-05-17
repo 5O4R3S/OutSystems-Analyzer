@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: A4; /* Tamanho da página */
+            margin: 1.5cm; /* Margens reduzidas para aproveitar mais espaço */
+            /* A regra @bottom-right não é totalmente suportada pelo xhtml2pdf e causa um TypeError.
+               Removendo-a para permitir a geração do PDF.
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 8pt;
+                color: #7f8c8d;
+            } */
+        }
+        body {
+            background-color: #ffffff;
+            color: #2c3e50;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 9pt;
+            line-height: 1.5;
+        }
+
+        /* --- Elementos de Design --- */
+        .text-blue { color: #2980b9; }
+        .text-red { color: #e74c3c; }
+        .text-muted { color: #7f8c8d; }
+        
+        .cover-page { text-align: center; padding-top: 5cm; }
+        .cover-title { font-size: 32pt; font-weight: bold; color: #1a2a3a; }
+        .cover-hr { width: 100px; height: 3px; background: #2980b9; margin: 20px auto; }
+        
+        .section-header {
+            background-color: #1a2a3a;
+            color: white;
+            padding: 10px;
+            font-size: 12pt;
+            font-weight: bold;
+            border-left: 5px solid #2980b9;
+            margin: 20px 0 10px 0;
+        }
+
+        h3 {
+            color: #2980b9;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 15px; 
+        }
+
+        th { background-color: #f8f9fa; color: #34495e; padding: 8px; font-size: 8pt; border: 1px solid #dee2e6; text-align: left; }
+        td { padding: 8px; border: 1px solid #dee2e6; font-size: 8pt; vertical-align: top; }
+
+        .label-cell { background-color: #fcfcfc; font-weight: bold; width: 30%; color: #7f8c8d; }
+        
+        .vulnerability-card {
+            border: 1px solid #eee;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+        .v-high { border-left: 5px solid #e74c3c; background-color: #fffafa; }
+        .v-low { border-left: 5px solid #27ae60; background-color: #fafffa; }
+
+        .code-snippet {
+            background-color: #2c3e50;
+            color: #00ff41;
+            padding: 8px;
+            font-family: Courier, monospace;
+            font-size: 7pt;
+        }
+
+        .summary-table {
+            width: 100%;
+            margin: 20px 0;
+        }
+        .summary-card {
+            text-align: center;
+            padding: 15px;
+            border: 2px solid #eee;
+        }
+
+        #footerContent {
+            text-align: right; font-size: 7pt; color: #bdc3c7; border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <!-- Frame do Rodapé -->
+    <div id="footerContent">
+        OutSystems Analyzer | Report ID: {{ report.metadata.analysis_id[:8] }} | Page <pdf:pagenumber>
+    </div>
+
+    <!-- Capa -->
+    <div class="cover-page">
+        <div class="cover-title">OUTSYSTEMS <span class="text-blue">ANALYZER</span></div>
+        <div class="cover-hr"></div>
+        <div class="cover-subtitle">Security Assessment Report</div>
+
+        <div style="margin-top: 3cm; background-color: #f9f9f9; padding: 30px; border: 1px solid #eee;">
+            <div class="text-muted" style="font-size: 8pt;">TARGET_OBJECT</div>
+            <div style="font-size: 14pt; font-weight: bold;">{{ report.target.applicationName or report.target.modulename }}</div>
+            <div class="text-blue" style="font-family: monospace;">{{ report.target.full_url }}</div>
+        </div>
+
+        <div style="margin-top: 4cm;">
+            <table style="width: 50%; margin-left: 25%;">
+                <tr>
+                    <td style="border:none;" class="text-muted">Analysis Date:</td>
+                    <td style="border:none; text-align: right;">{{ report.metadata.started_at | datetimeformat('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                <tr>
+                    <td style="border:none;" class="text-muted">Scan ID:</td>
+                    <td style="border:none; text-align: right; font-family: monospace;">{{ report.metadata.analysis_id[:13] }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <pdf:nextpage />
+
+    <div class="section-header">Executive Summary</div>
+    <p>This report documents the security posture of the analyzed OutSystems module. Findings are based on metadata extraction, service configuration analysis, and known vulnerability databases.</p>
+
+    <table class="summary-table">
+        <tr>
+            <td class="summary-card">
+                <div style="font-size: 20pt; font-weight: bold;">{{ report.screens_detail | length }}</div>
+                <div class="text-muted" style="font-size: 7pt;">TOTAL SCREENS</div>
+            </td>
+            <td class="summary-card">
+                <div class="text-red" style="font-size: 20pt; font-weight: bold;">{{ report.vulnerabilities | length }}</div>
+                <div class="text-muted" style="font-size: 7pt;">VULNERABILITIES</div>
+            </td>
+            <td class="summary-card">
+                <div style="font-size: 20pt; font-weight: bold; color: #f39c12;">{{ report.secret_scanner | length }}</div>
+                <div class="text-muted" style="font-size: 7pt;">LEAKED SECRETS</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section-header">1. Infrastructure Identification</div>
+    <table>
+        <tr>
+            <td class="label-cell">DNS / IP</td>
+            <td>{{ report.target.real_dns or 'N/A' }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Platform Version</td>
+            <td>{{ report.platform_info.Version or 'N/A' }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Stack</td>
+            <td>DB: {{ report.installation_info.DatabaseKind }} | Web: {{ report.installation_info.ApplicationServerType }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">CloudConnect</td>
+            <td>{{ report.target.cloudconnect_version or 'Not Detected' }}</td>
+        </tr>
+    </table>
+
+    <div class="section-header">2. Security Posture Analysis</div>
+    
+    <h3>2.1 Network Security Headers</h3>
+    <table>
+        <tr>
+            <th>Header</th>
+            <th>Configuration</th>
+        </tr>
+            {% for header, value in report.security_headers.items() %}
+            <tr>
+                <td style="font-weight: bold;">{{ header }}</td>
+                <td style="font-family: monospace; font-size: 7pt;">{{ value }}</td>
+            </tr>
+            {% endfor %}
+    </table>
+
+    <h3>2.2 Library Vulnerability Audit (CVE)</h3>
+    {% for v in report.vulnerabilities %}
+    <div class="vulnerability-card {{ 'v-high' if v.vulnerable else 'v-low' }}">
+        <div style="font-weight: bold; font-size: 10pt;">
+            {{ v.component }} - {{ v.cve }} 
+            <span class="text-red">[{{ v.severity }}]</span>
+        </div>
+        <p style="margin: 5px 0;">{{ v.summary }}</p>
+    </div>
+    {% else %}
+    <p class="text-muted">No known CVEs identified in third-party client components.</p>
+    {% endfor %}
+
+    <pdf:nextpage />
+
+    <div class="section-header">3. Source Code Intelligence</div>
+
+    <h3>3.1 Secret Scanner Results</h3>
+    {% if report.secret_scanner %}
+    <table>
+        <tr>
+            <th>Classification</th>
+            <th>Evidence (Context)</th>
+        </tr>
+        {% for item in report.secret_scanner %}
+        <tr>
+            <td style="font-weight: bold;">{{ item.type }}</td>
+            <td class="code-snippet">{{ item.evidence[:200] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p class="text-muted">No high-risk credentials or secrets detected in static assets.</p>
+    {% endif %}
+
+    <h3>3.2 Custom JavaScript Inspector</h3>
+    {% for js in report.custom_js_findings %}
+        {% if js.suspicious %}
+        <div class="vulnerability-card v-high">
+            <div style="font-weight: bold;">Screen: {{ js.screen }} | Element: {{ js.element_name }}</div>
+            <div class="code-snippet" style="margin-top: 5px;">{{ js.code_preview[:400] }}</div>
+        </div>
+        {% endif %}
+    {% endfor %}
+
+    <pdf:nextpage />
+
+    <div class="section-header">4. Application Inventory</div>
+
+    <h3>4.1 Client Variables Map</h3>
+    <table>
+        <tr>
+            <th>Variable</th>
+            <th>Type</th>
+            <th>Default Value</th>
+        </tr>
+        {% for var in report.client_variables %}
+        <tr>
+            <td style="font-weight: bold;">{{ var.name }}</td>
+            <td>{{ var.type }}</td>
+            <td style="{{ 'color: #e67e22;' if var.default_value and var.default_value not in ["''", '""'] }}">
+                {{ var.default_value or '-' }}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h3>4.2 Access Control Roles</h3>
+    <table>
+        <tr>
+            <th>Role Name</th>
+            <th>Internal Role Key</th>
+        </tr>
+        {% for role in report.roles %}
+        <tr>
+            <td style="font-weight: bold;">{{ role.name }}</td>
+            <td style="font-family: monospace; font-size: 7pt; color: #f39c12;">{{ role.rolekey }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <pdf:nextpage />
+    
+    <div class="section-header">5. Interface Map & Variables</div>
+    {% for screen in report.screens_detail %}
+        <div style="margin-bottom: 20px;">
+            <div style="font-weight: bold; background: #f1f1f1; padding: 5px;">
+                Path: <span class="text-blue">{{ screen.path }}</span>
+            </div>
+            {% if screen.variables %}
+            <table style="margin-top: 5px;">
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Scope</th>
+                </tr>
+                {% for var in screen.variables %}
+                <tr>
+                    <td>{{ var.name }}</td>
+                    <td>{{ var.type }}</td>
+                    <td>
+                        {% if var.is_input %}Input{% endif %}
+                        {% if var.is_local %}Local{% endif %}
+                        {% if var.is_aggregate %}DataAction{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+</body>
+</html>
